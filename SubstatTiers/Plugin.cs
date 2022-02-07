@@ -4,13 +4,13 @@ using Dalamud.Plugin;
 using System.IO;
 using System.Reflection;
 
-namespace SamplePlugin
+namespace SubstatTiers
 {
     public sealed class Plugin : IDalamudPlugin
     {
-        public string Name => "Sample Plugin";
+        public string Name => "Substat Tiers";
 
-        private const string commandName = "/pmycommand";
+        private const string commandName = "/psubstattiers";
 
         private DalamudPluginInterface PluginInterface { get; init; }
         private CommandManager CommandManager { get; init; }
@@ -34,7 +34,7 @@ namespace SamplePlugin
 
             this.CommandManager.AddHandler(commandName, new CommandInfo(OnCommand)
             {
-                HelpMessage = "A useful message to display in /xlhelp"
+                HelpMessage = "Displays substat tiers and effects."
             });
 
             this.PluginInterface.UiBuilder.Draw += DrawUI;

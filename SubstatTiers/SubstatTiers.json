@@ -1,0 +1,12 @@
+{
+  "Author": "TheArcane43",
+  "Name": "Substat Tiers",
+  "Punchline": "Shows how substats tier and what effects you get from them.",
+  "Description": "Gives a detailed table of how your substats work.",
+  "InternalName": "SubstatTiers",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "substat",
+    "tiers"
+  ]
+}

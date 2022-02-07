@@ -1,0 +1,13 @@
+{
+  "Author": "TheArcane43",
+  "Name": "Substat Tiers",
+  "Punchline": "Shows how substats tier and what effects you get from them.",
+  "Description": "Gives a detailed table of how your substats work.\n\n/psubtiers: Opens the main command window.",
+  "InternalName": "SubstatTiers",
+  "ApplicableVersion": "any",
+  "Tags": [
+    "sample",
+    "plugin",
+    "goats"
+  ]
+}
