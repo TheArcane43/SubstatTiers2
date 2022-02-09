@@ -1,12 +1,16 @@
 {
   "Author": "TheArcane43",
   "Name": "Substat Tiers",
-  "Punchline": "Shows how substats tier and what effects you get from them.",
-  "Description": "Gives a detailed table of how your substats work.",
   "InternalName": "SubstatTiers",
+  "AssemblyVersion": "0.1.0.0",
+  "RepoUrl": "https://github.com/TheArcane43/SubstatTiers",
+  "Description": "Gives a detailed table of how your substats work.",
   "ApplicableVersion": "any",
   "Tags": [
     "substat",
     "tiers"
-  ]
+  ],
+  "DalamudApiLevel": 5,
+  "LoadPriority": 0,
+  "Punchline": "Shows how substats tier and what effects you get from them."
 }
