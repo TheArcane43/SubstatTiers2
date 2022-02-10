@@ -1,6 +1,7 @@
 ﻿using ImGuiNET;
 using System;
 using System.Numerics;
+using System.Collections.Generic;
 using Dalamud;
 using Dalamud.Logging;
 using System.Linq;
@@ -62,8 +63,8 @@ namespace SubstatTiers
                 return;
             }
 
-            ImGui.SetNextWindowSize(new Vector2(320, 275), ImGuiCond.FirstUseEver);
-            ImGui.SetNextWindowSizeConstraints(new Vector2(320, 275), new Vector2(float.MaxValue, float.MaxValue));
+            ImGui.SetNextWindowSize(new Vector2(300, 300), ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowSizeConstraints(new Vector2(300, 300), new Vector2(float.MaxValue, float.MaxValue));
             if (ImGui.Begin("Substat Tiers", ref this.visible, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
                 //ImGui.Text($"The random config bool is {this.configuration.SomePropertyToBeSavedAndWithADefault}");
@@ -80,9 +81,13 @@ namespace SubstatTiers
                 //ImGui.Image(this.goatImage.ImGuiHandle, new Vector2(this.goatImage.Width, this.goatImage.Height));
                 //ImGui.Unindent(55);
 
-                ImGui.Text("Effects only consider traits and GCD buffs/traits.");
                 Attributes a = Retrieval.GetDataFromGame();
-
+                if (a.CriticalHit < 20 || a.SkillSpeed < 20)
+                {
+                    ImGui.Text("Substat Tiers does not work in PvP.\r\nNo substats available.");
+                    ImGui.End();
+                    return;
+                }
                 Calculations calc = new()
                 {
                     Level = a.Level,
@@ -94,8 +99,22 @@ namespace SubstatTiers
                     Tenacity = a.Tenacity,
                     Piety = a.Piety,
                 };
-                // physical/magical gcd split
-                int[] physical = { 1, 2, 3, 4, 5, 19, 20, 21, 22, 23, 29, 30, 31, 32, 34, 37, 38, 39};
+
+                // TODO: change this to get info from game
+                int jobId = a.JobId;
+                Job.ClassJobData jobData;
+                if (Job.JobData.ContainsKey(jobId))
+                {
+                    jobData = Job.JobData[jobId];
+                }
+                else
+                {
+                    ImGui.Text("Substats do not apply for your current class/job.");
+                    return;
+                }
+
+                ImGui.Text("Effects only consider traits and GCD buffs/traits.");
+                ImGui.Text("Substats unrelated to this class/job are excluded.");
 
                 int unitsCritHit = calc.GetUnits(StatConstants.SubstatType.Crit);
                 int unitsDetermination = calc.GetUnits(StatConstants.SubstatType.Det);
@@ -122,14 +141,12 @@ namespace SubstatTiers
                 int nextPiety = calc.GetStatsFromUnits(StatConstants.SubstatType.Piety, unitsPiety + 1);
 
                 int unitsSpeed, prevSpeed, nextSpeed;
-                string speedText;
-                if (physical.Contains(a.JobId))
+                if (jobData.IsPhysical)
                 {
                     calc.Speed = calc.SkillSpeed;
                     unitsSpeed = unitsSkillSpeed;
                     prevSpeed = prevSkillSpeed;
                     nextSpeed = nextSkillSpeed;
-                    speedText = "Skill Speed";
                 }
                 else
                 {
@@ -137,29 +154,9 @@ namespace SubstatTiers
                     unitsSpeed = unitsSpellSpeed;
                     prevSpeed = prevSpellSpeed;
                     nextSpeed = nextSpellSpeed;
-                    speedText = "Spell Speed";
                 }
 
-                // Haste calculations
-                int[,] HastePGL = { { 1, 5 }, { 20, 10 } };
-                int[,] HasteMNK = { { 1, 5 }, { 20, 10 }, { 40, 15 }, { 76, 20 } };
-                int[,] HasteBRD = { { 1, 0 }, { 40, 16 } };
-                int[,] HasteWHM = { { 1, 0 }, { 30, 20 } };
-                int[,] HasteBLM = { { 1, 0 }, { 52, 15 } };
-                int[,] HasteNIN = { { 1, 0 }, { 45, 15 } };
-                int[,] HasteSAM = { { 1, 0 }, { 18, 10 }, { 78, 13 } };
-                int[,] HasteNone = { { 0, 0 } };
-                int[,] HasteArray = a.JobId switch
-                {
-                    2 => HastePGL,
-                    20 => HasteMNK,
-                    23 => HasteBRD,
-                    24 => HasteWHM,
-                    25 => HasteBLM,
-                    30 => HasteNIN,
-                    34 => HasteSAM,
-                    _ => HasteNone,
-                };
+                int[,] HasteArray = jobData.HasteValues;
 
                 int hasteAmt = 0;
                 for (int i = 0; i < HasteArray.Length / 2; i++)
@@ -169,52 +166,83 @@ namespace SubstatTiers
                         hasteAmt = HasteArray[i, 1];
                     }
                 }
-                Console.WriteLine(hasteAmt);
-
-                string HasteName = a.JobId switch
-                {
-                    2 => "GL",
-                    20 => "GL",
-                    23 => "4 Paeon",
-                    24 => "PoM",
-                    25 => "LL",
-                    30 => "Huton",
-                    34 => "Fuka",
-                    _ => "",
-                };
 
                 double gcd = Formulas.GCDFormula(unitsSpeed, 0);
                 double gcdModified = Formulas.GCDFormula(unitsSpeed, hasteAmt);
 
+                // List of stats/tiers
+                List<VisibleInfo> statList = new();
+                statList.Add(new VisibleInfo("Critical Hit", calc.CritHit, prevCritHit - calc.CritHit, nextCritHit - calc.CritHit));
+                statList.Add(new VisibleInfo("Determination", calc.Determination, prevDetermination - calc.Determination, nextDetermination - calc.Determination));
+                statList.Add(new VisibleInfo("Direct Hit Rate", calc.DirectHit, prevDirectHit - calc.DirectHit, nextDirectHit - calc.DirectHit));
+                if (jobData.IsPhysical)
+                {
+                    statList.Add(new VisibleInfo("Skill Speed", calc.SkillSpeed, prevSkillSpeed - calc.SkillSpeed, nextSkillSpeed - calc.SkillSpeed));
+                }
+                else
+                {
+                    statList.Add(new VisibleInfo("Spell Speed", calc.SpellSpeed, prevSpellSpeed - calc.SpellSpeed, nextSpellSpeed - calc.SpellSpeed));
+                }
+                if (jobData.RoleStat == Job.RoleStats.Tenacity)
+                {
+                    statList.Add(new VisibleInfo("Tenacity", calc.Tenacity, prevTenacity - calc.Tenacity, nextTenacity - calc.Tenacity));
+                }
+                if (jobData.RoleStat == Job.RoleStats.Piety)
+                {
+                    statList.Add(new VisibleInfo("Piety", calc.Piety, prevPiety - calc.Piety, nextPiety - calc.Piety));
+                }
 
-                // ImGui.Text(calc.ToString());
-
-                object[][] data = new object[9][];
-                data[0] = new object[] { "Critical Rate", $"{unitsCritHit * 0.001 + 0.05:P1}", calc.CritHit, prevCritHit - calc.CritHit, (nextCritHit - calc.CritHit).ToString("+0") };
-                data[1] = new object[] { "Crit Damage", $"{unitsCritHit * 0.001 + 0.40:P1}", "", "", "" };
-                data[2] = new object[] { "Determination", $"{unitsDetermination * 0.001:P1}", calc.Determination, prevDetermination - calc.Determination, (nextDetermination - calc.Determination).ToString("+0")};
-                data[3] = new object[] { "Direct Hit Rate", $"{unitsDirectHit * 0.001:P1}", calc.DirectHit, prevDirectHit - calc.DirectHit, (nextDirectHit - calc.DirectHit).ToString("+0") };
-                data[4] = new object[] { speedText, $"{unitsSpeed * 0.001:P1}", calc.Speed, prevSpeed - calc.Speed, (nextSpeed - calc.Speed).ToString("+0") };
-                data[5] = new object[] { "Tenacity", $"{unitsTenacity * 0.001:P1}", calc.Tenacity, prevTenacity - calc.Tenacity, (nextTenacity - calc.Tenacity).ToString("+0") };
-                data[6] = new object[] { "Piety", $"{unitsPiety + 200} MP", calc.Piety, prevPiety - calc.Piety, (nextPiety - calc.Piety).ToString("+0") };
-                data[7] = new object[] {$"GCD", $"{gcd:F2}", "",  "", "" };
-                data[8] = new object[] {$"GCD ({HasteName})", $"{gcdModified:F2}", "", "", "" };
+                // List of effects
+                List<VisibleEffect> effects = new();
+                effects.Add(new VisibleEffect("Critical Rate", $"{unitsCritHit * 0.001 + 0.05:P1}"));
+                effects.Add(new VisibleEffect("Critical Damage", $"+{unitsCritHit * 0.001 + 0.40:P1}"));
+                effects.Add(new VisibleEffect("Determination", $"+{unitsDetermination * 0.001:P1}"));
+                effects.Add(new VisibleEffect("Direct Hit Rate", $"{unitsDirectHit * 0.001:P1}"));
+                effects.Add(new VisibleEffect("DoT Bonus", $"+{unitsSpeed * 0.001:P1}"));
+                if (jobData.RoleStat == Job.RoleStats.Tenacity)
+                {
+                    effects.Add(new VisibleEffect("Bonus Damage/Mitigation", $"+{unitsTenacity * 0.001:P1}"));
+                }
+                if (jobData.RoleStat == Job.RoleStats.Piety)
+                {
+                    effects.Add(new VisibleEffect("MP Regen per tick", $"{unitsPiety + 200} MP"));
+                }
+                effects.Add(new VisibleEffect("GCD (Base)", $"{gcd:F2}"));
+                if (jobData.HasHaste)
+                {
+                    effects.Add(new VisibleEffect($"GCD ({jobData.HasteName})", $"{gcdModified:F2}"));
+                }
+                
 
                 ImGui.Spacing();
 
                 ImGuiTableFlags flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders;
 
-                if (ImGui.BeginTable("table1", 5, flags))
+                // Stat Table Setup
+                if (ImGui.BeginTable("tableStats", 4, flags))
                 {
-                    ImGui.TableSetupColumn($"Level {calc.Level}",ImGuiTableColumnFlags.WidthFixed);
-                    ImGui.TableSetupColumn($"Effect", ImGuiTableColumnFlags.WidthFixed, 60);
+                    ImGui.TableSetupColumn($"{jobData.JobThreeLetter} Lv{calc.Level}",ImGuiTableColumnFlags.WidthFixed);
                     ImGui.TableSetupColumn($"Stat", ImGuiTableColumnFlags.WidthFixed, 50);
                     ImGui.TableSetupColumn($"Prev", ImGuiTableColumnFlags.WidthFixed, 40);
                     ImGui.TableSetupColumn($"Next", ImGuiTableColumnFlags.WidthFixed, 40);
                     ImGui.TableHeadersRow();
 
-                    int MaxRows = 8 + ((hasteAmt>0)?1:0);
+                    // Stat Table
+                    foreach (var row in statList)
+                    {
+                        ImGui.TableNextRow();
+                        ImGui.TableSetColumnIndex(0);
+                        ImGui.TextUnformatted(row.Name);
+                        ImGui.TableSetColumnIndex(1);
+                        ImGui.TextUnformatted(row.Stat);
+                        ImGui.TableSetColumnIndex(2);
+                        ImGui.TextUnformatted(row.Prev);
+                        ImGui.TableSetColumnIndex(3);
+                        ImGui.TextUnformatted(row.Next);
+                    }
 
+                    // old
+                    /*
                     for (int row = 0; row < MaxRows; row++)
                     {
                         ImGui.TableNextRow();
@@ -224,6 +252,29 @@ namespace SubstatTiers
                             ImGui.TextUnformatted(data[row][col].ToString());
                         }
                     }
+                    */
+                    ImGui.EndTable();
+
+                }
+                ImGui.Spacing();
+
+                // Effect Table Setup
+                if (ImGui.BeginTable("tableEffects", 2, flags))
+                {
+                    ImGui.TableSetupColumn($"Stat", ImGuiTableColumnFlags.WidthFixed, 150);
+                    ImGui.TableSetupColumn($"Effect", ImGuiTableColumnFlags.WidthFixed, 50);
+                    ImGui.TableHeadersRow();
+
+                    // Effect Table
+                    foreach (var row in effects)
+                    {
+                        ImGui.TableNextRow();
+                        ImGui.TableSetColumnIndex(0);
+                        ImGui.TextUnformatted(row.EffectName);
+                        ImGui.TableSetColumnIndex(1);
+                        ImGui.TextUnformatted(row.EffectAmount);
+                    }
+
                     ImGui.EndTable();
 
                 }

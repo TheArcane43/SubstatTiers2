@@ -127,10 +127,6 @@ namespace SubstatTiers
         internal const int TenacityCoeff = 100;
         internal const int PietyCoeff = 150;
 
-        // testing at 90
-        internal const int MainAt90 = 390;
-        internal const int SubAt90 = 400;
-        internal const int DivAt90 = 1900;
         private static int GetMainAtLevel(int level)
         {
             int result = StatTiers.GetStat(level, StatTiers.DataType.Main);
@@ -219,7 +215,7 @@ namespace SubstatTiers
         internal static double GCDFormula(int units, int haste)
         {
             // Assumes all actions have a 2500ms base delay.
-            // Formula: floor(floor(100 * (100 - haste) / 100) * floor((2000 - spd) * 2.500) / 1000) / 100
+            // Formula: floor(floor(100 * (100 - haste) / 100) * floor((1000 - spd) * 2.500) / 1000) / 100
             int spdMod = (int)Math.Floor((1000.0 - units) * 2.500);
             double hasteMod = 100.0 - haste /* multiply by 100 and divide by 100 cancel */;
             double result = Math.Floor(hasteMod * spdMod / 1000.0) / 100;
