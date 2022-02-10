@@ -10,7 +10,7 @@ namespace SubstatTiers
     {
         public string Name => "Substat Tiers";
 
-        private const string commandName = "/psubstattiers";
+        private const string commandName = "/psubstat";
 
         private DalamudPluginInterface PluginInterface { get; init; }
         private CommandManager CommandManager { get; init; }

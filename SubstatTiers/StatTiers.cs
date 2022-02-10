@@ -119,4 +119,40 @@ namespace SubstatTiers
             return StatTable[lv, column];
         }
     }
+
+    internal class VisibleInfo
+    {
+        internal string Name { get; set; }
+        internal string Stat { get; set; }
+        internal string Prev { get; set; }
+        internal string Next { get; set; }
+
+        internal VisibleInfo(string name, int s, int p, int n)
+        {
+            Name = name;
+            Stat = $"{s}";
+            Prev = $"{p}";
+            Next = $"{n:+0}";
+        }
+        internal VisibleInfo(string name, double f)
+        {
+            Name = name;
+            Stat = $"{f:F2}";
+            Prev = "";
+            Next = "";
+        }
+
+    }
+
+    internal class VisibleEffect
+    {
+        internal string EffectName { get; set; }
+        internal string EffectAmount { get; set; }
+
+        internal VisibleEffect(string name, string unitFormat)
+        {
+            EffectName = name;
+            EffectAmount = unitFormat;
+        }
+    }
 }

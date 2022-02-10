@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Dalamud;
 using Dalamud.Logging;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
@@ -73,4 +74,83 @@ namespace SubstatTiers
 
         }
     }
+
+    internal class Job
+    {
+
+        internal enum RoleStats
+        {
+            None,
+            Tenacity,
+            Piety
+        }
+
+        internal struct ClassJobData
+        {
+            internal string JobName { get; set; }
+            internal string JobThreeLetter { get; set; }
+            internal bool IsPhysical { get; set; }
+            internal bool HasHaste { get; set; }
+            internal int[,] HasteValues { get; set; }
+            internal string HasteName { get; set; }
+            internal RoleStats RoleStat { get; set; }
+
+
+            internal ClassJobData(string name, string tla, bool p, bool h, int[,]? haste, string hname, RoleStats roleStats)
+            {
+                JobName = name;
+                JobThreeLetter = tla;
+                IsPhysical = p;
+                HasHaste = h;
+                if (haste == null)
+                {
+                    HasteValues = new int[,] { { 0, 0 } };
+                    HasteName = "";
+                }
+                else
+                {
+                    HasteValues = haste;
+                    HasteName = hname;
+                }
+
+                RoleStat = roleStats;
+
+            }
+
+        }
+
+         internal static readonly Dictionary<int, ClassJobData> JobData = new() {
+            { 1, new ClassJobData("Gladiator", "GLA", true, false, null, "", RoleStats.Tenacity ) },
+            { 2, new ClassJobData("Pugilist", "PGL", true, true, new int[,] { { 1, 5 }, { 20, 10 } }, "Greased Lightning", RoleStats.None) },
+            { 3, new ClassJobData("Marauder", "MRD", true, false, null, "", RoleStats.Tenacity) },
+            { 4, new ClassJobData("Lancer", "LNC", true, false, null, "", RoleStats.None) },
+            { 5, new ClassJobData("Archer", "ARC", true, false, null, "", RoleStats.None) },
+            { 6, new ClassJobData("Conjurer", "CNJ", false, false, null, "", RoleStats.Piety) },
+            { 7, new ClassJobData("Thaumaturge", "THM", false, false, null, "", RoleStats.None) },
+
+            { 19, new ClassJobData("Paladin", "PLD", true, false, null, "", RoleStats.Tenacity) },
+            { 20, new ClassJobData("Monk", "MNK", true, true, new int[,] { { 1, 5 }, { 20, 10 }, { 40, 15 }, { 76, 20 } }, "Greased Lightning", RoleStats.None) },
+            { 21, new ClassJobData("Warrior", "WAR", true, false, null, "", RoleStats.Tenacity) },
+            { 22, new ClassJobData("Dragoon", "DRG", true, false, null, "", RoleStats.None) },
+            { 23, new ClassJobData("Bard", "BRD", true, true, new int[,] { { 1, 0 }, { 40, 16 } }, "Army's Paeon [MAX]", RoleStats.None) },
+            { 24, new ClassJobData("White Mage", "WHM", false, true, new int[,] { { 1, 0 }, { 30, 20 } }, "Presence of Mind", RoleStats.Piety) },
+            { 25, new ClassJobData("Black Mage", "BLM", false, true, new int[,] { { 1, 0 }, { 52, 15 } }, "Ley Lines", RoleStats.None) },
+            { 26, new ClassJobData("Arcanist", "ACN", false, false, null, "", RoleStats.None) },
+            { 27, new ClassJobData("Summoner", "SMN", false, false, null, "", RoleStats.None) },
+            { 28, new ClassJobData("Scholar", "SCH", false, false, null, "", RoleStats.Piety) },
+            { 29, new ClassJobData("Rogue", "ROG", true, false, null, "", RoleStats.None) },
+            { 30, new ClassJobData("Ninja", "NIN", true, true, new int[,] { { 1, 0 }, { 45, 15 } }, "Huton", RoleStats.None) },
+            { 31, new ClassJobData("Machinist", "MCH", true, false, null, "", RoleStats.None) },
+            { 32, new ClassJobData("Dark Knight", "DRK", true, false, null, "", RoleStats.Tenacity) },
+            { 33, new ClassJobData("Astrologian", "AST", false, false, null, "", RoleStats.Piety) },
+            { 34, new ClassJobData("Samurai", "SAM", true, true, new int[,] { { 1, 0 }, { 18, 10 }, { 78, 13 } }, "Shifu", RoleStats.None) },
+            { 35, new ClassJobData("Red Mage", "RDM", false, false, null, "", RoleStats.None) },
+            { 36, new ClassJobData("Blue Mage", "BLU", false, false, null, "", RoleStats.None) },
+            { 37, new ClassJobData("Gunbreaker", "GNB", true, false, null, "", RoleStats.Tenacity) },
+            { 38, new ClassJobData("Dancer", "DNC", true, false, null, "", RoleStats.None) },
+            { 39, new ClassJobData("Reaper", "RPR", true, false, null, "", RoleStats.None) },
+            { 40, new ClassJobData("Sage", "SGE", false, false, null, "", RoleStats.Piety) }
+         };
+    }
+
 }
