@@ -14,7 +14,7 @@
   "LoadPriority": 0,
   "Punchline": "Shows how substats tier and what effects you get from them.",
   "DownloadCount": 0,
-  "DownloadLinkInstall": ,
-  "DownloadLinkTesting": ,
-  "DownloadLinkUpdate": 
+  "DownloadLinkInstall": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.1.0.1/latest.zip",
+  "DownloadLinkTesting": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.1.0.1/latest.zip",
+  "DownloadLinkUpdate": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.1.0.1/latest.zip"
 }
