@@ -14,6 +14,8 @@
     "DalamudApiLevel": 5,
     "LoadPriority": 0,
     "Punchline": "Shows how substats tier and what effects you get from them.",
+    "LastUpdated": 1644469986,
+    "IsHide": "False",
     "DownloadCount": 0,
     "DownloadLinkInstall": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.1.0.1/latest.zip",
     "DownloadLinkTesting": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.1.0.1/latest.zip",
