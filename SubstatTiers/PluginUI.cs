@@ -88,6 +88,18 @@ namespace SubstatTiers
                     ImGui.End();
                     return;
                 }
+                int jobId = a.JobId;
+                Job.ClassJobData jobData;
+                if (Job.JobData.ContainsKey(jobId))
+                {
+                    jobData = Job.JobData[jobId];
+                }
+                else
+                {
+                    ImGui.Text("Substats do not apply for your current class/job.");
+                    ImGui.End();
+                    return;
+                }
                 Calculations calc = new()
                 {
                     Level = a.Level,
@@ -99,19 +111,6 @@ namespace SubstatTiers
                     Tenacity = a.Tenacity,
                     Piety = a.Piety,
                 };
-
-                // TODO: change this to get info from game
-                int jobId = a.JobId;
-                Job.ClassJobData jobData;
-                if (Job.JobData.ContainsKey(jobId))
-                {
-                    jobData = Job.JobData[jobId];
-                }
-                else
-                {
-                    ImGui.Text("Substats do not apply for your current class/job.");
-                    return;
-                }
 
                 ImGui.Text("Effects only consider traits and GCD buffs/traits.");
                 ImGui.Text("Substats unrelated to this class/job are excluded.");
@@ -306,6 +305,7 @@ namespace SubstatTiers
             if (ImGui.Begin("Settings Window", ref this.settingsVisible,
                 ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
+                /*
                 // can't ref a property, so use a local copy
                 var configValue = this.configuration.SomePropertyToBeSavedAndWithADefault;
                 if (ImGui.Checkbox("Button That Does Nothing", ref configValue))
@@ -314,6 +314,8 @@ namespace SubstatTiers
                     // can save immediately on change, if you don't want to provide a "Save and Close" button
                     this.configuration.Save();
                 }
+                */
+                ImGui.Text("There are no settings for this plugin (yet!).");
             }
             ImGui.End();
         }
