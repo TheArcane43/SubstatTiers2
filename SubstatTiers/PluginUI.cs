@@ -63,9 +63,9 @@ namespace SubstatTiers
                 return;
             }
 
-            ImGui.SetNextWindowSize(new Vector2(300, 300), ImGuiCond.FirstUseEver);
-            ImGui.SetNextWindowSizeConstraints(new Vector2(300, 300), new Vector2(float.MaxValue, float.MaxValue));
-            if (ImGui.Begin("Substat Tiers", ref this.visible, ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
+            ImGui.SetNextWindowSize(new Vector2(310, 333), ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowSizeConstraints(new Vector2(310, 333), new Vector2(float.MaxValue, float.MaxValue));
+            if (ImGui.Begin("Substat Tiers", ref this.visible, ImGuiWindowFlags.None))
             {
                 //ImGui.Text($"The random config bool is {this.configuration.SomePropertyToBeSavedAndWithADefault}");
 
@@ -84,7 +84,7 @@ namespace SubstatTiers
                 Attributes a = Retrieval.GetDataFromGame();
                 if (a.CriticalHit < 20 || a.SkillSpeed < 20)
                 {
-                    ImGui.Text("Substat Tiers does not work in PvP.\r\nNo substats available.");
+                    ImGui.Text("Substat Tiers does not work in this area.");
                     ImGui.End();
                     return;
                 }
@@ -172,45 +172,45 @@ namespace SubstatTiers
 
                 // List of stats/tiers
                 List<VisibleInfo> statList = new();
-                statList.Add(new VisibleInfo("Critical Hit", calc.CritHit, prevCritHit - calc.CritHit, nextCritHit - calc.CritHit));
-                statList.Add(new VisibleInfo("Determination", calc.Determination, prevDetermination - calc.Determination, nextDetermination - calc.Determination));
-                statList.Add(new VisibleInfo("Direct Hit Rate", calc.DirectHit, prevDirectHit - calc.DirectHit, nextDirectHit - calc.DirectHit));
+                statList.Add(new VisibleInfo("Critical Hit", calc.CritHit, calc.CritHit - prevCritHit, nextCritHit - calc.CritHit));
+                statList.Add(new VisibleInfo("Determination", calc.Determination, calc.Determination - prevDetermination, nextDetermination - calc.Determination));
+                statList.Add(new VisibleInfo("Direct Hit Rate", calc.DirectHit, calc.DirectHit - prevDirectHit, nextDirectHit - calc.DirectHit));
                 if (jobData.IsPhysical)
                 {
-                    statList.Add(new VisibleInfo("Skill Speed", calc.SkillSpeed, prevSkillSpeed - calc.SkillSpeed, nextSkillSpeed - calc.SkillSpeed));
+                    statList.Add(new VisibleInfo("Skill Speed", calc.SkillSpeed, calc.SkillSpeed - prevSkillSpeed, nextSkillSpeed - calc.SkillSpeed));
                 }
                 else
                 {
-                    statList.Add(new VisibleInfo("Spell Speed", calc.SpellSpeed, prevSpellSpeed - calc.SpellSpeed, nextSpellSpeed - calc.SpellSpeed));
+                    statList.Add(new VisibleInfo("Spell Speed", calc.SpellSpeed, calc.SpellSpeed - prevSpellSpeed, nextSpellSpeed - calc.SpellSpeed));
                 }
                 if (jobData.RoleStat == Job.RoleStats.Tenacity)
                 {
-                    statList.Add(new VisibleInfo("Tenacity", calc.Tenacity, prevTenacity - calc.Tenacity, nextTenacity - calc.Tenacity));
+                    statList.Add(new VisibleInfo("Tenacity", calc.Tenacity, calc.Tenacity - prevTenacity, nextTenacity - calc.Tenacity));
                 }
                 if (jobData.RoleStat == Job.RoleStats.Piety)
                 {
-                    statList.Add(new VisibleInfo("Piety", calc.Piety, prevPiety - calc.Piety, nextPiety - calc.Piety));
+                    statList.Add(new VisibleInfo("Piety", calc.Piety, calc.Piety - prevPiety, nextPiety - calc.Piety));
                 }
 
                 // List of effects
                 List<VisibleEffect> effects = new();
-                effects.Add(new VisibleEffect("Critical Rate", $"{unitsCritHit * 0.001 + 0.05:P1}"));
-                effects.Add(new VisibleEffect("Critical Damage", $"+{unitsCritHit * 0.001 + 0.40:P1}"));
-                effects.Add(new VisibleEffect("Determination", $"+{unitsDetermination * 0.001:P1}"));
-                effects.Add(new VisibleEffect("Direct Hit Rate", $"{unitsDirectHit * 0.001:P1}"));
-                effects.Add(new VisibleEffect("DoT Bonus", $"+{unitsSpeed * 0.001:P1}"));
+                effects.Add(new VisibleEffect("Critical Rate", $"{unitsCritHit * 0.001 + 0.05:P1}", "The frequency of critical hits"));
+                effects.Add(new VisibleEffect("Critical Damage", $"+{unitsCritHit * 0.001 + 0.40:P1}", "Damage bonus when you hit a critical hit"));
+                effects.Add(new VisibleEffect("Determination", $"+{unitsDetermination * 0.001:P1}", "Overall increase in outgoing damage and healing"));
+                effects.Add(new VisibleEffect("Direct Hit Rate", $"{unitsDirectHit * 0.001:P1}", "The frequency of direct hits"));
+                effects.Add(new VisibleEffect("DoT Bonus", $"+{unitsSpeed * 0.001:P1}", "Damage bonus on damage over time effects"));
                 if (jobData.RoleStat == Job.RoleStats.Tenacity)
                 {
-                    effects.Add(new VisibleEffect("Bonus Damage/Mitigation", $"+{unitsTenacity * 0.001:P1}"));
+                    effects.Add(new VisibleEffect("Tenacity Bonus", $"+{unitsTenacity * 0.001:P1}", "Extra damage, mitigation, and outgoing healing as a tank"));
                 }
                 if (jobData.RoleStat == Job.RoleStats.Piety)
                 {
-                    effects.Add(new VisibleEffect("MP Regen per tick", $"{unitsPiety + 200} MP"));
+                    effects.Add(new VisibleEffect("MP Regen per tick", $"{unitsPiety + 200} MP", "MP recovery every 3 seconds"));
                 }
-                effects.Add(new VisibleEffect("GCD (Base)", $"{gcd:F2}"));
+                effects.Add(new VisibleEffect("GCD (Base)", $"{gcd:F2}", "Recast time for most actions with a base of 2.50 seconds"));
                 if (jobData.HasHaste)
                 {
-                    effects.Add(new VisibleEffect($"GCD ({jobData.HasteName})", $"{gcdModified:F2}"));
+                    effects.Add(new VisibleEffect($"GCD ({jobData.HasteName})", $"{gcdModified:F2}", "Recast time when under the given effect"));
                 }
                 
 
@@ -223,7 +223,7 @@ namespace SubstatTiers
                 {
                     ImGui.TableSetupColumn($"{jobData.JobThreeLetter} Lv{calc.Level}",ImGuiTableColumnFlags.WidthFixed);
                     ImGui.TableSetupColumn($"Stat", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableSetupColumn($"Prev", ImGuiTableColumnFlags.WidthFixed, 40);
+                    ImGui.TableSetupColumn($"Over", ImGuiTableColumnFlags.WidthFixed, 40);
                     ImGui.TableSetupColumn($"Next", ImGuiTableColumnFlags.WidthFixed, 40);
                     ImGui.TableHeadersRow();
 
@@ -237,8 +237,16 @@ namespace SubstatTiers
                         ImGui.TextUnformatted(row.Stat);
                         ImGui.TableSetColumnIndex(2);
                         ImGui.TextUnformatted(row.Prev);
+                        if (ImGui.IsItemHovered())
+                        {
+                            ImGui.SetTooltip("Amount of stat wasted for this tier");
+                        }
                         ImGui.TableSetColumnIndex(3);
                         ImGui.TextUnformatted(row.Next);
+                        if (ImGui.IsItemHovered())
+                        {
+                            ImGui.SetTooltip("Amount of stat required to reach the next tier");
+                        }
                     }
 
                     // old
@@ -271,6 +279,10 @@ namespace SubstatTiers
                         ImGui.TableNextRow();
                         ImGui.TableSetColumnIndex(0);
                         ImGui.TextUnformatted(row.EffectName);
+                        if (ImGui.IsItemHovered())
+                        {
+                            ImGui.SetTooltip(row.EffectTooltip);
+                        }
                         ImGui.TableSetColumnIndex(1);
                         ImGui.TextUnformatted(row.EffectAmount);
                     }

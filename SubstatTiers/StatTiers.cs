@@ -148,11 +148,14 @@ namespace SubstatTiers
     {
         internal string EffectName { get; set; }
         internal string EffectAmount { get; set; }
+        internal string EffectTooltip { get; set; }
 
-        internal VisibleEffect(string name, string unitFormat)
+
+        internal VisibleEffect(string name, string unitFormat, string tooltip)
         {
             EffectName = name;
             EffectAmount = unitFormat;
+            EffectTooltip = tooltip;
         }
     }
 }
