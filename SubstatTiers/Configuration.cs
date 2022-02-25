@@ -9,7 +9,7 @@ namespace SubstatTiers
     {
         public int Version { get; set; } = 1;
 
-        public bool SomePropertyToBeSavedAndWithADefault { get; set; } = true;
+        // public bool SomePropertyToBeSavedAndWithADefault { get; set; } = true;
 
         // the below exist just to make saving less cumbersome
 
