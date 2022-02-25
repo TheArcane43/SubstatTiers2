@@ -19,74 +19,47 @@ namespace SubstatTiers
 
         internal int GetUnits(StatConstants.SubstatType substat)
         {
-            int stat = 1;
-            int coeff = 1;
-            switch(substat)
+            int stat = substat switch
             {
-                case StatConstants.SubstatType.Crit:
-                    stat = this.CritHit;
-                    coeff = StatConstants.CritCoeff;
-                    break;
-                case StatConstants.SubstatType.Det:
-                    stat = this.Determination;
-                    coeff = StatConstants.DeterminationCoeff;
-                    break;
-                case StatConstants.SubstatType.Direct:
-                    stat = this.DirectHit;
-                    coeff = StatConstants.DirectCoeff;
-                    break;
-                case StatConstants.SubstatType.SkSpd:
-                    stat = this.SkillSpeed;
-                    coeff = StatConstants.SkillCoeff;
-                    break;
-                case StatConstants.SubstatType.SpSpd:
-                    stat = this.SpellSpeed;
-                    coeff = StatConstants.SpellCoeff;
-                    break;
-                case StatConstants.SubstatType.Ten:
-                    stat = this.Tenacity;
-                    coeff = StatConstants.TenacityCoeff;
-                    break;
-                case StatConstants.SubstatType.Piety:
-                    stat = this.Piety;
-                    coeff = StatConstants.PietyCoeff;
-                    break;
-                default:
-                    break;
-            }
+                StatConstants.SubstatType.Crit => CritHit,
+                StatConstants.SubstatType.Det => Determination,
+                StatConstants.SubstatType.Direct => DirectHit,
+                StatConstants.SubstatType.SkSpd => SkillSpeed,
+                StatConstants.SubstatType.SpSpd => SpellSpeed,
+                StatConstants.SubstatType.Ten => Tenacity,
+                StatConstants.SubstatType.Piety => Piety,
+                _ => 1,
+            };
+            int coeff = substat switch
+            {
+                StatConstants.SubstatType.Crit => StatConstants.CritCoeff,
+                StatConstants.SubstatType.Det => StatConstants.DeterminationCoeff,
+                StatConstants.SubstatType.Direct => StatConstants.DirectCoeff,
+                StatConstants.SubstatType.SkSpd => StatConstants.SkillCoeff,
+                StatConstants.SubstatType.SpSpd => StatConstants.SpellCoeff,
+                StatConstants.SubstatType.Ten => StatConstants.TenacityCoeff,
+                StatConstants.SubstatType.Piety => StatConstants.PietyCoeff,
+                _ => 1,
+            };
+
             return Formulas.StatFormula(StatConstants.GetDivAtLevel(this.Level), stat, StatConstants.GetBaseStatAtLevel(this.Level, substat), coeff);
         }
 
         internal int GetStatsFromUnits(StatConstants.SubstatType substat, int units)
         {
-            
-            int coeff = 1;
-            switch (substat)
+
+            int coeff = substat switch
             {
-                case StatConstants.SubstatType.Crit:
-                    coeff = StatConstants.CritCoeff;
-                    break;
-                case StatConstants.SubstatType.Det:
-                    coeff = StatConstants.DeterminationCoeff;
-                    break;
-                case StatConstants.SubstatType.Direct:
-                    coeff = StatConstants.DirectCoeff;
-                    break;
-                case StatConstants.SubstatType.SkSpd:
-                    coeff = StatConstants.SkillCoeff;
-                    break;
-                case StatConstants.SubstatType.SpSpd:
-                    coeff = StatConstants.SpellCoeff;
-                    break;
-                case StatConstants.SubstatType.Ten:
-                    coeff = StatConstants.TenacityCoeff;
-                    break;
-                case StatConstants.SubstatType.Piety:
-                    coeff = StatConstants.PietyCoeff;
-                    break;
-                default:
-                    break;
-            }
+                StatConstants.SubstatType.Crit => StatConstants.CritCoeff,
+                StatConstants.SubstatType.Det => StatConstants.DeterminationCoeff,
+                StatConstants.SubstatType.Direct => StatConstants.DirectCoeff,
+                StatConstants.SubstatType.SkSpd => StatConstants.SkillCoeff,
+                StatConstants.SubstatType.SpSpd => StatConstants.SpellCoeff,
+                StatConstants.SubstatType.Ten => StatConstants.TenacityCoeff,
+                StatConstants.SubstatType.Piety => StatConstants.PietyCoeff,
+                _ => 1,
+            };
+
             return Formulas.ReverseStatFormula(StatConstants.GetDivAtLevel(this.Level), units, StatConstants.GetBaseStatAtLevel(this.Level, substat), coeff);
         }
 
@@ -155,11 +128,13 @@ namespace SubstatTiers
 
     internal class Formulas
     {
+        // Given the stat, return the number of tiers
         internal static int StatFormula(int div, int stat, int baseStat, int coeff)
         {
             // Master formula (stat -> effect): units = floor(coeff * (stat - [main|sub]) / div)
             return (int)Math.Floor((double)(coeff * (stat - baseStat)) / (double)div);
         }
+        // Given a number of tiers, return the minimum stat required
         internal static int ReverseStatFormula(int div, int units, int baseStat, int coeff)
         {
             // Reverse master formula (effect -> stat): stat = ceil((units * div) / coeff) + [main|sub]
@@ -173,7 +148,7 @@ namespace SubstatTiers
 
         private static int AttackPower(int att, int main)
         {
-            double someConstant = 200.0;
+            double someConstant = 165.0;
             return (int)(Math.Floor(someConstant * (att - main) / main) + 100);
         }
 
@@ -212,56 +187,27 @@ namespace SubstatTiers
             return randCalc;
         }
 
+        // Given units of speed and haste percent, return GCD
         internal static double GCDFormula(int units, int haste)
         {
             // Assumes all actions have a 2500ms base delay.
             // Formula: floor(floor(100 * (100 - haste) / 100) * floor((1000 - spd) * 2.500) / 1000) / 100
             int spdMod = (int)Math.Floor((1000.0 - units) * 2.500);
-            double hasteMod = 100.0 - haste /* multiply by 100 and divide by 100 cancel */;
+            double hasteMod = 100.0 - haste; /* multiply by 100 and divide by 100 cancel */
             double result = Math.Floor(hasteMod * spdMod / 1000.0) / 100;
             return result;
         }
-    }
 
-    internal class Attributes
-    {
-        // Main stats
-        internal int Level { get; set; }
-        internal int JobId { get; set; }
-        internal int Strength { get; set; }
-        internal int Dexterity { get; set; }
-        internal int Vitality { get; set; }
-        internal int Intelligence { get; set; }
-        internal int Mind { get; set; }
-
-        // substats
-        internal int CriticalHit { get; set; }
-        internal int Determination { get; set; }
-        internal int DirectHit { get; set; }
-        internal int SkillSpeed { get; set; }
-        internal int SpellSpeed { get; set; }
-        internal int Tenacity { get; set; }
-        internal int Piety { get; set; }
-
-        // other stats
-        internal int MaxHP { get; set; }
-        internal int MaxMP { get; set; }
-        internal int MaxTP { get; set; }
-        internal int AutoAttackDelay { get; set; }
-        internal int AttackPower { get; set; }
-        internal int AttackMagicPotency { get; set; }
-        internal int HealingMagicPotency { get; set; }
-        internal int Defense { get; set; }
-        internal int MagicDefense { get; set; }
-        internal int Haste { get; set; }
-
-        // Non-battle specific
-        internal int MaxGP { get; set; }
-        internal int MaxCP { get; set; }
-        internal int Craftsmanship { get; set; }
-        internal int Control { get; set; }
-        internal int Gathering { get; set; }
-        internal int Perception { get; set; }
+        // Given target GCD and haste percent, return tiers required
+        internal static int ReverseGCDFormula(double gcd, int haste)
+        {
+            int gcdMod = (int)Math.Ceiling((gcd + 0.01) * 100);
+            int hasteMod = (int)Math.Ceiling(gcdMod / (100.0 - haste) * 1000.0);
+            int result = (int)Math.Floor(-(hasteMod / 2.500 - 1000)) + 1;
+            return result;
+        }
 
     }
+
+    
 }

@@ -73,7 +73,7 @@ namespace SubstatTiers
             {214,350,522},
             {215,351,548},
             {217,352,574},
-            {218,354,600},
+            {218,354,600}, // lv 60
             {224,355,630},
             {228,356,660},
             {236,357,690},
@@ -83,7 +83,7 @@ namespace SubstatTiers
             {268,361,810},
             {276,362,840},
             {284,363,870},
-            {292,364,900},
+            {292,364,900}, // lv 70
             {296,365,940},
             {300,366,980},
             {305,367,1020},
@@ -93,7 +93,7 @@ namespace SubstatTiers
             {325,374,1180},
             {330,376,1220},
             {335,378,1260},
-            {340,380,1300},
+            {340,380,1300}, // lv 80
             {345,382,1360},
             {350,384,1420},
             {355,386,1480},
@@ -134,13 +134,14 @@ namespace SubstatTiers
             Prev = $"{p}";
             Next = $"{n:+0}";
         }
-        internal VisibleInfo(string name, double f)
+        internal VisibleInfo(string name, double f, int p, int n)
         {
             Name = name;
             Stat = $"{f:F2}";
-            Prev = "";
-            Next = "";
+            Prev = $"{p}";
+            Next = $"{n:+0}";
         }
+
 
     }
 
@@ -148,11 +149,14 @@ namespace SubstatTiers
     {
         internal string EffectName { get; set; }
         internal string EffectAmount { get; set; }
+        internal string EffectTooltip { get; set; }
 
-        internal VisibleEffect(string name, string unitFormat)
+
+        internal VisibleEffect(string name, string unitFormat, string tooltip)
         {
             EffectName = name;
             EffectAmount = unitFormat;
+            EffectTooltip = tooltip;
         }
     }
 }
