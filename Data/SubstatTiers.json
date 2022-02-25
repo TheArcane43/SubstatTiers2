@@ -2,7 +2,7 @@
   "Author": "TheArcane43",
   "Name": "Substat Tiers",
   "Punchline": "Shows how substats tier and what effects you get from them.",
-  "Description": "Gives a detailed table of how your substats work.\n\n/psubtiers: Opens the main command window.",
+  "Description": "Gives a detailed table of how your substats work.\n\n/psubtiers: Opens the main command window.\n\nIf you're seeing this, please report this to me with the code 'JSONISSUE'.",
   "InternalName": "SubstatTiers",
   "ApplicableVersion": "any",
   "Tags": [

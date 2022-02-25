@@ -38,7 +38,7 @@ namespace SubstatTiers
             });
 
             this.PluginInterface.UiBuilder.Draw += DrawUI;
-            this.PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
+            // this.PluginInterface.UiBuilder.OpenConfigUi += DrawConfigUI;
         }
 
         public void Dispose()
