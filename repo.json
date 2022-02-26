@@ -5,7 +5,7 @@
     "InternalName": "SubstatTiers",
     "AssemblyVersion": "0.2.0.0",
     "RepoUrl": "https://github.com/TheArcane43/SubstatTiers2",
-    "Description": "Gives a detailed table of how your substats work.",
+    "Description": "Gives a detailed table of how your substats work. Includes substat tiering, substat effects, and potential tier gains on materia.",
     "ApplicableVersion": "any",
     "Tags": [
       "substat",
@@ -14,11 +14,12 @@
     "DalamudApiLevel": 5,
     "LoadPriority": 0,
     "Punchline": "Shows how substats tier and what effects you get from them.",
-    "LastUpdated": 1644479986,
+    "LastUpdated": 0,
     "IsHide": "False",
     "DownloadCount": 0,
-    "DownloadLinkInstall": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.1.0.2/latest.zip",
-    "DownloadLinkTesting": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.1.0.2/latest.zip",
-    "DownloadLinkUpdate": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.1.0.2/latest.zip"
+    "DownloadLinkInstall": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.2.0.0/latest.zip",
+    "DownloadLinkTesting": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.2.0.0/latest.zip",
+    "DownloadLinkUpdate": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.2.0.0/latest.zip",
+    "Changelog": "Updated substat tables to show GCD tiers.\nAdded potential materia bonuses table.\nUpdated config file: you can choose which tables are displayed."
   }
 ]
