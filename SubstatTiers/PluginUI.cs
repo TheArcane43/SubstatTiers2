@@ -93,17 +93,7 @@ namespace SubstatTiers
                     ImGui.End();
                     return;
                 }
-                Calculations calc = new()
-                {
-                    Level = a.Level,
-                    CritHit = a.CriticalHit,
-                    Determination = a.Determination,
-                    DirectHit = a.DirectHit,
-                    SkillSpeed = a.SkillSpeed,
-                    SpellSpeed = a.SpellSpeed,
-                    Tenacity = a.Tenacity,
-                    Piety = a.Piety,
-                };
+                Calculations calc = new(a);
 
 
                 // Main table -------------------------------------------------
@@ -126,6 +116,8 @@ namespace SubstatTiers
                 int prevSpellSpeed = calc.GetStatsFromUnits(StatConstants.SubstatType.SpSpd, unitsSpellSpeed);
                 int prevTenacity = calc.GetStatsFromUnits(StatConstants.SubstatType.Ten, unitsTenacity);
                 int prevPiety = calc.GetStatsFromUnits(StatConstants.SubstatType.Piety, unitsPiety);
+                int prevGCDBase = calc.GetStatsFromUnits(calc.SpeedType, calc.GetSpeedUnitsOfGCDbase());
+                int prevGCDModified = calc.GetStatsFromUnits(calc.SpeedType, calc.GetSpeedUnitsOfGCDmodified());
 
                 int nextCritHit = calc.GetStatsFromUnits(StatConstants.SubstatType.Crit, unitsCritHit + 1);
                 int nextDetermination = calc.GetStatsFromUnits(StatConstants.SubstatType.Det, unitsDetermination + 1);
@@ -134,46 +126,9 @@ namespace SubstatTiers
                 int nextSpellSpeed = calc.GetStatsFromUnits(StatConstants.SubstatType.SpSpd, unitsSpellSpeed + 1);
                 int nextTenacity = calc.GetStatsFromUnits(StatConstants.SubstatType.Ten, unitsTenacity + 1);
                 int nextPiety = calc.GetStatsFromUnits(StatConstants.SubstatType.Piety, unitsPiety + 1);
+                int nextGCDBase = calc.GetStatsFromUnits(calc.SpeedType, calc.GetSpeedUnitsOfNextGCDbase());
+                int nextGCDModified = calc.GetStatsFromUnits(calc.SpeedType, calc.GetSpeedUnitsOfNextGCDmodified());
 
-                int unitsSpeed;
-                if (a.UsesAttackPower())
-                {
-                    calc.Speed = calc.SkillSpeed;
-                    unitsSpeed = unitsSkillSpeed;
-                }
-                else
-                {
-                    calc.Speed = calc.SpellSpeed;
-                    unitsSpeed = unitsSpellSpeed;
-                }
-
-                int hasteAmt = a.HasteAmount();
-
-                double gcd = Formulas.GCDFormula(unitsSpeed, 0);
-                int gcdUnitsPrev = Formulas.ReverseGCDFormula(gcd, 0);
-                int gcdUnitsNext = Formulas.ReverseGCDFormula(gcd - 0.01, 0);
-                int gcdPrev, gcdNext;
-
-
-                double gcdModified = Formulas.GCDFormula(unitsSpeed, hasteAmt);
-                int gcdModUnitsPrev = Formulas.ReverseGCDFormula(gcdModified, hasteAmt);
-                int gcdModUnitsNext = Formulas.ReverseGCDFormula(gcdModified - 0.01, hasteAmt);
-
-                int gcdModPrev, gcdModNext;
-                if (a.UsesAttackPower())
-                {
-                    gcdPrev = calc.GetStatsFromUnits(StatConstants.SubstatType.SkSpd, gcdUnitsPrev);
-                    gcdNext = calc.GetStatsFromUnits(StatConstants.SubstatType.SkSpd, gcdUnitsNext);
-                    gcdModPrev = calc.GetStatsFromUnits(StatConstants.SubstatType.SkSpd, gcdModUnitsPrev);
-                    gcdModNext = calc.GetStatsFromUnits(StatConstants.SubstatType.SkSpd, gcdModUnitsNext);
-                }
-                else
-                {
-                    gcdPrev = calc.GetStatsFromUnits(StatConstants.SubstatType.SpSpd, gcdUnitsPrev);
-                    gcdNext = calc.GetStatsFromUnits(StatConstants.SubstatType.SpSpd, gcdUnitsNext);
-                    gcdModPrev = calc.GetStatsFromUnits(StatConstants.SubstatType.SpSpd, gcdModUnitsPrev);
-                    gcdModNext = calc.GetStatsFromUnits(StatConstants.SubstatType.SpSpd, gcdModUnitsNext);
-                }
 
                 // List of stats/tiers
                 List<VisibleInfo> statList = new();
@@ -197,11 +152,11 @@ namespace SubstatTiers
                     statList.Add(new VisibleInfo(StatConstants.SubstatType.Piety.VisibleName(), calc.Piety, calc.Piety - prevPiety, nextPiety - calc.Piety));
                 }
 
-                statList.Add(new VisibleInfo("GCD(Base)", gcd, calc.Speed - gcdPrev, gcdNext - calc.Speed));
+                statList.Add(new VisibleInfo("GCD(Base)", calc.GetGCDbase(), calc.Speed - prevGCDBase, nextGCDBase - calc.Speed));
 
                 if (a.HasteAmount() > 0)
                 {
-                    statList.Add(new VisibleInfo("GCD +", gcdModified, calc.Speed - gcdModPrev, gcdModNext - calc.Speed));
+                    statList.Add(new VisibleInfo("GCD +", calc.GetGCDmodified(), calc.Speed - prevGCDModified, nextGCDModified - calc.Speed));
                 }
 
                 // List of effects
@@ -210,7 +165,14 @@ namespace SubstatTiers
                 effects.Add(new VisibleEffect("Critical Damage", $"+{unitsCritHit * 0.001 + 0.40:P1}", "Damage bonus when you hit a critical hit"));
                 effects.Add(new VisibleEffect("Determination", $"+{unitsDetermination * 0.001:P1}", "Overall increase in outgoing damage and healing"));
                 effects.Add(new VisibleEffect("Direct Hit Rate", $"{unitsDirectHit * 0.001:P1}", "The frequency of direct hits"));
-                effects.Add(new VisibleEffect("DoT Bonus", $"+{unitsSpeed * 0.001:P1}", "Damage bonus on damage over time effects"));
+                if (a.UsesAttackPower())
+                {
+                    effects.Add(new VisibleEffect("DoT Bonus", $"+{unitsSkillSpeed * 0.001:P1}", "Damage bonus on damage over time effects"));
+                }
+                else
+                {
+                    effects.Add(new VisibleEffect("DoT Bonus", $"+{unitsSpellSpeed * 0.001:P1}", "Damage bonus on damage over time effects"));
+                }
                 if (a.IsTank())
                 {
                     effects.Add(new VisibleEffect("Tenacity Bonus", $"+{unitsTenacity * 0.001:P1}", "Extra damage, mitigation, and outgoing healing as a tank"));
@@ -219,10 +181,10 @@ namespace SubstatTiers
                 {
                     effects.Add(new VisibleEffect("MP Regen per tick", $"{unitsPiety + 200} MP", "MP recovery every 3 seconds"));
                 }
-                effects.Add(new VisibleEffect("GCD (Base)", $"{gcd:F2}", "Recast time for most actions with a base of 2.50 seconds"));
+                effects.Add(new VisibleEffect("GCD (Base)", $"{calc.GetGCDbase():F2}", "Recast time for most actions with a base of 2.50 seconds"));
                 if (a.HasteAmount() > 0)
                 {
-                    effects.Add(new VisibleEffect($"GCD ({a.HasteName()})", $"{gcdModified:F2}", "Recast time when under the given effect"));
+                    effects.Add(new VisibleEffect($"GCD ({a.HasteName()})", $"{calc.GetGCDmodified():F2}", "Recast time when under the given effect"));
                 }
 
                 // List of materia tiers
@@ -247,7 +209,11 @@ namespace SubstatTiers
                 {
                     materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Piety));
                 }
-                // GCD? materiaTiers.Add(new VisibleMateria(calc))
+                materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.GCDbase));
+                if (a.HasteAmount() > 0)
+                {
+                    materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.GCDmodified));
+                }
 
 
                 ImGui.Spacing();

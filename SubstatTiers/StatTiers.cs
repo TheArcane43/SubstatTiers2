@@ -196,9 +196,22 @@ namespace SubstatTiers
                 calcThree.GetUnits(type) - calc.GetUnits(type),
                 calcFour.GetUnits(type) - calc.GetUnits(type)
             };
+            
+
             string[] result = new string[4];
             for (int i = 0; i < bonusTiers.Length; i++)
             {
+                // Correction for GCD
+                if (type == StatConstants.SubstatType.GCDbase)
+                {
+                    // divide all values by 4 (4 speed tiers = 1 gcd tier)
+                    bonusTiers[i] = bonusTiers[i] / 4;
+                }
+                if (type == StatConstants.SubstatType.GCDmodified)
+                {
+                    // divide all values by 4/(100-haste) => 1 gcd tier
+                    bonusTiers[i] = (int)(bonusTiers[i] / (400.0 / (100.0 - calc.HasteAmount)));
+                }
                 result[i] = bonusTiers[i].ToString("+0");
             }
 
@@ -218,6 +231,8 @@ namespace SubstatTiers
                 StatConstants.SubstatType.SpSpd => "Each tier is +0.1%% DoT Bonus",
                 StatConstants.SubstatType.Ten => "Each tier is +0.1%% Tenacity Bonus",
                 StatConstants.SubstatType.Piety => "Each tier is +1 MP Regen per tick",
+                StatConstants.SubstatType.GCDbase => "Each tier is -0.01s GCD at base",
+                StatConstants.SubstatType.GCDmodified => "Each tier is -0.01s GCD with speed bonuses",
                 _ => throw new NotImplementedException()
             };
         }

@@ -11,14 +11,24 @@ namespace SubstatTiers
 
         internal int SkillSpeed { get; set; } = 400;
         internal int SpellSpeed { get; set; } = 400;
-
         internal int Speed { get; set; } = 400;
 
         internal int Tenacity { get; set; } = 400;
         internal int Piety { get; set; } = 390;
 
+        internal StatConstants.SubstatType SpeedType = 0;
+        internal int HasteAmount = 0;
+
         internal int GetUnits(StatConstants.SubstatType substat)
         {
+            if (substat == StatConstants.SubstatType.GCDbase)
+            {
+                return GetSpeedUnitsOfGCDbase();
+            }
+            if (substat == StatConstants.SubstatType.GCDmodified)
+            {
+                return GetSpeedUnitsOfGCDmodified();
+            }
             int stat = substat switch
             {
                 StatConstants.SubstatType.Crit => CritHit,
@@ -47,7 +57,6 @@ namespace SubstatTiers
 
         internal int GetStatsFromUnits(StatConstants.SubstatType substat, int units)
         {
-
             int coeff = substat switch
             {
                 StatConstants.SubstatType.Crit => StatConstants.CritCoeff,
@@ -63,17 +72,26 @@ namespace SubstatTiers
             return Formulas.ReverseStatFormula(StatConstants.GetDivAtLevel(this.Level), units, StatConstants.GetBaseStatAtLevel(this.Level, substat), coeff);
         }
 
-        public override string ToString()
+        internal Calculations()
         {
-            string lv = $"Player Level: {this.Level}\n";
-            string crit = $"Crit Hit Rate: {this.GetUnits(StatConstants.SubstatType.Crit) * 0.1 + 5:F1}%%\nCrit Damage: {this.GetUnits(StatConstants.SubstatType.Crit) * 0.1 + 140:F1}%%\n";
-            string det = $"Determination Bonus: {this.GetUnits(StatConstants.SubstatType.Det) * 0.1:F1}%%\n";
-            string dh = $"Direct Hit Rate: {this.GetUnits(StatConstants.SubstatType.Direct) * 0.1:F1}%%\n";
-            string sk = $"Physical GCD: {Formulas.GCDFormula(this.GetUnits(StatConstants.SubstatType.SkSpd), 0):F2}\n";
-            string sp = $"Magical GCD: {Formulas.GCDFormula(this.GetUnits(StatConstants.SubstatType.SpSpd), 0):F2}\n";
-            string ten = $"Tenacity Bonus: {this.GetUnits(StatConstants.SubstatType.Ten) * 0.1:F1}%%\n";
-            string pie = $"MP Recovery: {this.GetUnits(StatConstants.SubstatType.Piety) + 200} MP\n";
-            return string.Concat(lv, crit, det, dh, sk, sp, ten, pie);
+            // Use default values
+        }
+
+        internal Calculations(AttributeData a)
+        {
+            Level = a.Level;
+            CritHit = a.CriticalHit;
+            Determination = a.Determination;
+            DirectHit = a.DirectHit;
+            SkillSpeed = a.SkillSpeed;
+            SpellSpeed = a.SpellSpeed;
+            Tenacity = a.Tenacity;
+            Piety = a.Piety;
+
+            SpeedType = a.UsesAttackPower() ? StatConstants.SubstatType.SkSpd : StatConstants.SubstatType.SpSpd;
+            Speed = a.UsesAttackPower() ? SkillSpeed : SpellSpeed;
+            HasteAmount = a.HasteAmount();
+
         }
 
         public object Clone()
@@ -90,11 +108,23 @@ namespace SubstatTiers
             c.DirectHit = this.DirectHit + modifier;
             c.SkillSpeed = this.SkillSpeed + modifier;
             c.SpellSpeed = this.SpellSpeed + modifier;
-            c.Speed = this.Speed + modifier;
             c.Tenacity = this.Tenacity + modifier;
             c.Piety = this.Piety + modifier;
+            c.Speed = this.Speed + modifier;
+            c.SpeedType = this.SpeedType;
+            c.HasteAmount = this.HasteAmount;
             return c;
         }
+
+        internal double GetGCDbase() => Formulas.GCDFormula(GetUnits(SpeedType), 0);
+        internal double GetGCDmodified() => Formulas.GCDFormula(GetUnits(SpeedType), HasteAmount);
+        internal int GetSpeedUnitsOfGCDbase() => Formulas.ReverseGCDFormula(GetGCDbase(), 0);
+        internal int GetSpeedUnitsOfGCDmodified() => Formulas.ReverseGCDFormula(GetGCDmodified(), HasteAmount);
+        internal int GetSpeedUnitsOfNextGCDbase() => Formulas.ReverseGCDFormula(GetGCDbase() - 0.010000001, 0);
+        internal int GetSpeedUnitsOfNextGCDmodified() => Formulas.ReverseGCDFormula(GetGCDmodified() - 0.010000001, HasteAmount);
+        // NOTE: due to rounding and/or float precision, the 0.010000001 is necessary to actually move to the next GCD
+        //   don't know which one it is, but it doesn't seem to break anything else
+
     }
 
     internal static class Extensions
@@ -110,6 +140,8 @@ namespace SubstatTiers
                 StatConstants.SubstatType.SpSpd => "Spell Speed",
                 StatConstants.SubstatType.Ten => "Tenacity",
                 StatConstants.SubstatType.Piety => "Piety",
+                StatConstants.SubstatType.GCDbase => "GCD(Base)",
+                StatConstants.SubstatType.GCDmodified => "GCD +",
                 _ => "",
             };
         }
@@ -124,7 +156,9 @@ namespace SubstatTiers
             SkSpd,
             SpSpd,
             Ten,
-            Piety
+            Piety,
+            GCDbase,
+            GCDmodified
         }
 
 
@@ -236,7 +270,7 @@ namespace SubstatTiers
             return result;
         }
 
-        // Given target GCD and haste percent, return tiers required
+        // Given target GCD and haste percent, return units of speed
         internal static int ReverseGCDFormula(double gcd, int haste)
         {
             int gcdMod = (int)Math.Ceiling((gcd + 0.01) * 100);
