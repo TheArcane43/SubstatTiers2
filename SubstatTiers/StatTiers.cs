@@ -159,4 +159,82 @@ namespace SubstatTiers
             EffectTooltip = tooltip;
         }
     }
+
+    internal class VisibleMateria
+    {
+        internal string EffectName { get; set; }
+        internal string[] EffectTiers { get; set; }
+        internal string EffectTooltip { get; set; }
+
+        internal static int[] MateriaTiersAt(int level)
+        {
+            return level switch
+            {
+                < 30 => new int[] { 1, 2, 3, 4 }, // lv 15: only +1 materia (I)
+                < 45 => new int[] { 2, 4, 6, 8 }, // lv 30: only +2 materia (II)
+                < 50 => new int[] { 3, 6, 9, 12 }, // lv 45: only +3 materia (III)
+                < 60 => new int[] { 4, 8, 12, 16 }, // lv 50: only +4 materia (IV)
+                < 70 => new int[] { 6, 12, 18, 24 }, // lv 60: only +6 materia (V)
+                < 80 => new int[] { 6, 12, 16, 32 }, // lv 70: +6 and +16 available (V and VI)
+                < 90 => new int[] { 8, 16, 24, 48 }, // lv 80: +8 and +24 available (VII and VIII)
+                _ => new int[] { 12, 24, 36, 72 }, // lv 90: +12 and +36 available (IX and X)
+            };
+        }
+
+        internal string[] GetTiers(Calculations calc, StatConstants.SubstatType type)
+        {
+            int level = calc.Level;
+            int[] tiers = MateriaTiersAt(level);
+            Calculations calcOne = (Calculations)calc.Clone(tiers[0]);
+            Calculations calcTwo = (Calculations)calc.Clone(tiers[1]);
+            Calculations calcThree = (Calculations)calc.Clone(tiers[2]);
+            Calculations calcFour = (Calculations)calc.Clone(tiers[3]);
+            int[] bonusTiers = new int[]
+            {
+                calcOne.GetUnits(type) - calc.GetUnits(type),
+                calcTwo.GetUnits(type) - calc.GetUnits(type),
+                calcThree.GetUnits(type) - calc.GetUnits(type),
+                calcFour.GetUnits(type) - calc.GetUnits(type)
+            };
+            
+
+            string[] result = new string[4];
+            for (int i = 0; i < bonusTiers.Length; i++)
+            {
+                // Correction for GCD
+                if (type == StatConstants.SubstatType.GCDbase)
+                {
+                    // divide all values by 4 (4 speed tiers = 1 gcd tier)
+                    bonusTiers[i] = bonusTiers[i] / 4;
+                }
+                if (type == StatConstants.SubstatType.GCDmodified)
+                {
+                    // divide all values by 4/(100-haste) => 1 gcd tier
+                    bonusTiers[i] = (int)(bonusTiers[i] / (400.0 / (100.0 - calc.HasteAmount)));
+                }
+                result[i] = bonusTiers[i].ToString("+0");
+            }
+
+            return result;
+        }
+
+        internal VisibleMateria(Calculations calc, StatConstants.SubstatType type)
+        {
+            EffectName = type.VisibleName();
+            EffectTiers = GetTiers(calc, type);
+            EffectTooltip = type switch
+            {
+                StatConstants.SubstatType.Crit => "Each tier is +0.1%% Critical Rate and Critical Damage",
+                StatConstants.SubstatType.Det => "Each tier is +0.1%% Determination Bonus",
+                StatConstants.SubstatType.Direct => "Each tier is +0.1%% Direct Hit Rate",
+                StatConstants.SubstatType.SkSpd => "Each tier is +0.1%% DoT Bonus",
+                StatConstants.SubstatType.SpSpd => "Each tier is +0.1%% DoT Bonus",
+                StatConstants.SubstatType.Ten => "Each tier is +0.1%% Tenacity Bonus",
+                StatConstants.SubstatType.Piety => "Each tier is +1 MP Regen per tick",
+                StatConstants.SubstatType.GCDbase => "Each tier is -0.01s GCD at base",
+                StatConstants.SubstatType.GCDmodified => "Each tier is -0.01s GCD with speed bonuses",
+                _ => throw new NotImplementedException()
+            };
+        }
+    }
 }

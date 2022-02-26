@@ -3,8 +3,8 @@
   "Name": "Substat Tiers",
   "InternalName": "SubstatTiers",
   "AssemblyVersion": "0.2.0.0",
-  "RepoUrl": "https://github.com/TheArcane43/SubstatTiers",
-  "Description": "Gives a detailed table of how your substats work.",
+  "RepoUrl": "https://github.com/TheArcane43/SubstatTiers2",
+  "Description": "Gives a detailed table of how your substats work. Includes substat tiering, substat effects, and potential tier gains on materia.",
   "ApplicableVersion": "any",
   "Tags": [
     "substat",
@@ -12,5 +12,6 @@
   ],
   "DalamudApiLevel": 5,
   "LoadPriority": 0,
-  "Punchline": "Shows how substats tier and what effects you get from them."
+  "Punchline": "Shows how substats tier and what effects you get from them.",
+  "Changelog": "Updated substat tables to show GCD tiers.\nAdded potential materia bonuses table.\nUpdated config file: you can choose which tables are displayed."
 }

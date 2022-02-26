@@ -9,7 +9,8 @@ namespace SubstatTiers
     {
         public int Version { get; set; } = 1;
 
-        // public bool SomePropertyToBeSavedAndWithADefault { get; set; } = true;
+        public bool ShowSubstatEffects { get; set; } = true;
+        public bool ShowMateriaTiers { get; set; } = true;
 
         // the below exist just to make saving less cumbersome
 
