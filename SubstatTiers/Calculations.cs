@@ -2,7 +2,7 @@
 
 namespace SubstatTiers
 {
-    public class Calculations
+    public class Calculations : ICloneable
     {
         internal int Level { get; set; } = 90;
         internal int CritHit { get; set; } = 400;
@@ -75,8 +75,45 @@ namespace SubstatTiers
             string pie = $"MP Recovery: {this.GetUnits(StatConstants.SubstatType.Piety) + 200} MP\n";
             return string.Concat(lv, crit, det, dh, sk, sp, ten, pie);
         }
+
+        public object Clone()
+        {
+            return Clone(0);
+        }
+
+        public object Clone(int modifier)
+        {
+            Calculations c = new();
+            c.Level = this.Level;
+            c.CritHit = this.CritHit + modifier;
+            c.Determination = this.Determination + modifier;
+            c.DirectHit = this.DirectHit + modifier;
+            c.SkillSpeed = this.SkillSpeed + modifier;
+            c.SpellSpeed = this.SpellSpeed + modifier;
+            c.Speed = this.Speed + modifier;
+            c.Tenacity = this.Tenacity + modifier;
+            c.Piety = this.Piety + modifier;
+            return c;
+        }
     }
 
+    internal static class Extensions
+    {
+        internal static string VisibleName(this StatConstants.SubstatType type)
+        {
+            return type switch
+            {
+                StatConstants.SubstatType.Crit => "Critical Hit",
+                StatConstants.SubstatType.Det => "Determination",
+                StatConstants.SubstatType.Direct => "Direct Hit Rate",
+                StatConstants.SubstatType.SkSpd => "Skill Speed",
+                StatConstants.SubstatType.SpSpd => "Spell Speed",
+                StatConstants.SubstatType.Ten => "Tenacity",
+                StatConstants.SubstatType.Piety => "Piety",
+                _ => "",
+            };
+        }
+    }
     internal static class StatConstants
     {
         internal enum SubstatType
@@ -89,6 +126,7 @@ namespace SubstatTiers
             Ten,
             Piety
         }
+
 
         internal const int MaxLevel = 90;
 
@@ -132,7 +170,7 @@ namespace SubstatTiers
         internal static int StatFormula(int div, int stat, int baseStat, int coeff)
         {
             // Master formula (stat -> effect): units = floor(coeff * (stat - [main|sub]) / div)
-            return (int)Math.Floor((double)(coeff * (stat - baseStat)) / (double)div);
+            return (int)Math.Floor(coeff * (stat - baseStat) / (double)div);
         }
         // Given a number of tiers, return the minimum stat required
         internal static int ReverseStatFormula(int div, int units, int baseStat, int coeff)

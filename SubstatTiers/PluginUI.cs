@@ -53,7 +53,7 @@ namespace SubstatTiers
             // draw delegates as low as possible.
 
             DrawMainWindow();
-            //DrawSettingsWindow();
+            DrawSettingsWindow();
         }
 
         public unsafe void DrawMainWindow()
@@ -67,12 +67,11 @@ namespace SubstatTiers
             ImGui.SetNextWindowSizeConstraints(new Vector2(310, 333), new Vector2(float.MaxValue, float.MaxValue));
             if (ImGui.Begin("Substat Tiers", ref this.visible, ImGuiWindowFlags.None))
             {
-                //ImGui.Text($"The random config bool is {this.configuration.SomePropertyToBeSavedAndWithADefault}");
 
-                //if (ImGui.Button("Show Settings"))
-                //{
-                //    SettingsVisible = true;
-                //}
+                if (ImGui.Button("Show Settings"))
+                {
+                    SettingsVisible = true;
+                }
 
                 //ImGui.Spacing();
 
@@ -106,6 +105,9 @@ namespace SubstatTiers
                     Piety = a.Piety,
                 };
 
+
+                // Main table -------------------------------------------------
+
                 ImGui.Text("Effects only consider traits and GCD buffs/traits.");
                 ImGui.Text("Substats unrelated to this class/job are excluded.");
 
@@ -133,70 +135,73 @@ namespace SubstatTiers
                 int nextTenacity = calc.GetStatsFromUnits(StatConstants.SubstatType.Ten, unitsTenacity + 1);
                 int nextPiety = calc.GetStatsFromUnits(StatConstants.SubstatType.Piety, unitsPiety + 1);
 
-                int unitsSpeed, prevSpeed, nextSpeed;
+                int unitsSpeed;
                 if (a.UsesAttackPower())
                 {
                     calc.Speed = calc.SkillSpeed;
                     unitsSpeed = unitsSkillSpeed;
-                    prevSpeed = prevSkillSpeed;
-                    nextSpeed = nextSkillSpeed;
                 }
                 else
                 {
                     calc.Speed = calc.SpellSpeed;
                     unitsSpeed = unitsSpellSpeed;
-                    prevSpeed = prevSpellSpeed;
-                    nextSpeed = nextSpellSpeed;
                 }
 
                 int hasteAmt = a.HasteAmount();
 
                 double gcd = Formulas.GCDFormula(unitsSpeed, 0);
-                double gcdModified = Formulas.GCDFormula(unitsSpeed, hasteAmt);
-
-                int gcdUnitsPrev = Formulas.ReverseGCDFormula(gcdModified, hasteAmt);
-                int gcdUnitsNext = Formulas.ReverseGCDFormula(gcdModified - 0.01, hasteAmt);
-
+                int gcdUnitsPrev = Formulas.ReverseGCDFormula(gcd, 0);
+                int gcdUnitsNext = Formulas.ReverseGCDFormula(gcd - 0.01, 0);
                 int gcdPrev, gcdNext;
+
+
+                double gcdModified = Formulas.GCDFormula(unitsSpeed, hasteAmt);
+                int gcdModUnitsPrev = Formulas.ReverseGCDFormula(gcdModified, hasteAmt);
+                int gcdModUnitsNext = Formulas.ReverseGCDFormula(gcdModified - 0.01, hasteAmt);
+
+                int gcdModPrev, gcdModNext;
                 if (a.UsesAttackPower())
                 {
                     gcdPrev = calc.GetStatsFromUnits(StatConstants.SubstatType.SkSpd, gcdUnitsPrev);
                     gcdNext = calc.GetStatsFromUnits(StatConstants.SubstatType.SkSpd, gcdUnitsNext);
+                    gcdModPrev = calc.GetStatsFromUnits(StatConstants.SubstatType.SkSpd, gcdModUnitsPrev);
+                    gcdModNext = calc.GetStatsFromUnits(StatConstants.SubstatType.SkSpd, gcdModUnitsNext);
                 }
                 else
                 {
                     gcdPrev = calc.GetStatsFromUnits(StatConstants.SubstatType.SpSpd, gcdUnitsPrev);
                     gcdNext = calc.GetStatsFromUnits(StatConstants.SubstatType.SpSpd, gcdUnitsNext);
+                    gcdModPrev = calc.GetStatsFromUnits(StatConstants.SubstatType.SpSpd, gcdModUnitsPrev);
+                    gcdModNext = calc.GetStatsFromUnits(StatConstants.SubstatType.SpSpd, gcdModUnitsNext);
                 }
 
                 // List of stats/tiers
                 List<VisibleInfo> statList = new();
-                statList.Add(new VisibleInfo("Critical Hit", calc.CritHit, calc.CritHit - prevCritHit, nextCritHit - calc.CritHit));
-                statList.Add(new VisibleInfo("Determination", calc.Determination, calc.Determination - prevDetermination, nextDetermination - calc.Determination));
-                statList.Add(new VisibleInfo("Direct Hit Rate", calc.DirectHit, calc.DirectHit - prevDirectHit, nextDirectHit - calc.DirectHit));
+                statList.Add(new VisibleInfo(StatConstants.SubstatType.Crit.VisibleName(), calc.CritHit, calc.CritHit - prevCritHit, nextCritHit - calc.CritHit));
+                statList.Add(new VisibleInfo(StatConstants.SubstatType.Det.VisibleName(), calc.Determination, calc.Determination - prevDetermination, nextDetermination - calc.Determination));
+                statList.Add(new VisibleInfo(StatConstants.SubstatType.Direct.VisibleName(), calc.DirectHit, calc.DirectHit - prevDirectHit, nextDirectHit - calc.DirectHit));
                 if (a.UsesAttackPower())
                 {
-                    statList.Add(new VisibleInfo("Skill Speed", calc.SkillSpeed, calc.SkillSpeed - prevSkillSpeed, nextSkillSpeed - calc.SkillSpeed));
+                    statList.Add(new VisibleInfo(StatConstants.SubstatType.SkSpd.VisibleName(), calc.SkillSpeed, calc.SkillSpeed - prevSkillSpeed, nextSkillSpeed - calc.SkillSpeed));
                 }
                 else
                 {
-                    statList.Add(new VisibleInfo("Spell Speed", calc.SpellSpeed, calc.SpellSpeed - prevSpellSpeed, nextSpellSpeed - calc.SpellSpeed));
+                    statList.Add(new VisibleInfo(StatConstants.SubstatType.SpSpd.VisibleName(), calc.SpellSpeed, calc.SpellSpeed - prevSpellSpeed, nextSpellSpeed - calc.SpellSpeed));
                 }
                 if (a.IsTank())
                 {
-                    statList.Add(new VisibleInfo("Tenacity", calc.Tenacity, calc.Tenacity - prevTenacity, nextTenacity - calc.Tenacity));
+                    statList.Add(new VisibleInfo(StatConstants.SubstatType.Ten.VisibleName(), calc.Tenacity, calc.Tenacity - prevTenacity, nextTenacity - calc.Tenacity));
                 }
                 if (a.IsHealer())
                 {
-                    statList.Add(new VisibleInfo("Piety", calc.Piety, calc.Piety - prevPiety, nextPiety - calc.Piety));
+                    statList.Add(new VisibleInfo(StatConstants.SubstatType.Piety.VisibleName(), calc.Piety, calc.Piety - prevPiety, nextPiety - calc.Piety));
                 }
+
+                statList.Add(new VisibleInfo("GCD(Base)", gcd, calc.Speed - gcdPrev, gcdNext - calc.Speed));
+
                 if (a.HasteAmount() > 0)
                 {
-                    statList.Add(new VisibleInfo("GCD+", gcdModified, calc.Speed - gcdPrev, gcdNext - calc.Speed));
-                }
-                else
-                {
-                    statList.Add(new VisibleInfo("GCD", gcd, calc.Speed - gcdPrev, gcdNext - calc.Speed));
+                    statList.Add(new VisibleInfo("GCD +", gcdModified, calc.Speed - gcdModPrev, gcdModNext - calc.Speed));
                 }
 
                 // List of effects
@@ -219,16 +224,40 @@ namespace SubstatTiers
                 {
                     effects.Add(new VisibleEffect($"GCD ({a.HasteName()})", $"{gcdModified:F2}", "Recast time when under the given effect"));
                 }
-                
+
+                // List of materia tiers
+                List<VisibleMateria> materiaTiers = new();
+
+                materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Crit));
+                materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Det));
+                materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Direct));
+                if (a.UsesAttackPower())
+                {
+                    materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.SkSpd));
+                }
+                else
+                {
+                    materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.SpSpd));
+                }
+                if (a.IsTank())
+                {
+                    materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Ten));
+                }
+                if (a.IsHealer())
+                {
+                    materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Piety));
+                }
+                // GCD? materiaTiers.Add(new VisibleMateria(calc))
+
 
                 ImGui.Spacing();
 
-                ImGuiTableFlags flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders;
+                ImGuiTableFlags flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.NoHostExtendX;
 
                 // Stat Table Setup
                 if (ImGui.BeginTable("tableStats", 4, flags))
                 {
-                    ImGui.TableSetupColumn($"{a.GetJobTL()} Lv{calc.Level}",ImGuiTableColumnFlags.WidthFixed);
+                    ImGui.TableSetupColumn($"{a.GetJobTL()} Lv{calc.Level}", ImGuiTableColumnFlags.WidthFixed);
                     ImGui.TableSetupColumn($"Stat", ImGuiTableColumnFlags.WidthFixed, 50);
                     ImGui.TableSetupColumn($"Over", ImGuiTableColumnFlags.WidthFixed, 40);
                     ImGui.TableSetupColumn($"Next", ImGuiTableColumnFlags.WidthFixed, 40);
@@ -242,7 +271,7 @@ namespace SubstatTiers
                         ImGui.TextUnformatted(row.Name);
                         if (ImGui.IsItemHovered())
                         {
-                            if (row.Name == "GCD+")
+                            if (row.Name == "GCD +")
                             {
                                 ImGui.SetTooltip("GCD including job-specific speed boosts");
                             }
@@ -263,78 +292,122 @@ namespace SubstatTiers
                         }
                     }
 
-                    // old
-                    /*
-                    for (int row = 0; row < MaxRows; row++)
-                    {
-                        ImGui.TableNextRow();
-                        for (int col = 0; col < 5; col++)
-                        {
-                            ImGui.TableSetColumnIndex(col);
-                            ImGui.TextUnformatted(data[row][col].ToString());
-                        }
-                    }
-                    */
                     ImGui.EndTable();
 
                 }
+                ImGui.SameLine();
+
+                // Materia tiers table ----------------------------------------
+                if (configuration.ShowMateriaTiers)
+                {
+                    // Materia table setup
+                    if (ImGui.BeginTable("tableMateria", 5, flags))
+                    {
+                        int[] titles = VisibleMateria.MateriaTiersAt(a.Level);
+                        ImGui.TableSetupColumn("Materia:", ImGuiTableColumnFlags.WidthFixed, 100);
+                        ImGui.TableSetupColumn($"+ {titles[0]}", ImGuiTableColumnFlags.WidthFixed, 30);
+                        ImGui.TableSetupColumn($"+ {titles[1]}", ImGuiTableColumnFlags.WidthFixed, 30);
+                        ImGui.TableSetupColumn($"+ {titles[2]}", ImGuiTableColumnFlags.WidthFixed, 30);
+                        ImGui.TableSetupColumn($"+ {titles[3]}", ImGuiTableColumnFlags.WidthFixed, 30);
+                        ImGui.TableHeadersRow();
+
+                        // materia table
+                        foreach (var row in materiaTiers)
+                        {
+                            ImGui.TableNextRow();
+                            ImGui.TableSetColumnIndex(0);
+                            ImGui.TextUnformatted(row.EffectName);
+                            if (ImGui.IsItemHovered())
+                            {
+                                ImGui.SetTooltip(row.EffectTooltip);
+                            }
+                            for (int i = 0; i < row.EffectTiers.Length; i++)
+                            {
+                                ImGui.TableSetColumnIndex(1 + i);
+                                ImGui.TextUnformatted(row.EffectTiers[i]);
+                            }
+                        }
+                        ImGui.EndTable();
+                    }
+                }
+
+                ImGui.Spacing();
                 ImGui.Spacing();
 
-                // Effect Table Setup
-                if (ImGui.BeginTable("tableEffects", 2, flags))
+                // Stat Effects Table -----------------------------------------
+
+                if (configuration.ShowSubstatEffects)
                 {
-                    ImGui.TableSetupColumn($"Stat", ImGuiTableColumnFlags.WidthFixed, 150);
-                    ImGui.TableSetupColumn($"Effect", ImGuiTableColumnFlags.WidthFixed, 50);
-                    ImGui.TableHeadersRow();
 
-                    // Effect Table
-                    foreach (var row in effects)
+                    // Effect Table Setup
+                    if (ImGui.BeginTable("tableEffects", 2, flags))
                     {
-                        ImGui.TableNextRow();
-                        ImGui.TableSetColumnIndex(0);
-                        ImGui.TextUnformatted(row.EffectName);
-                        if (ImGui.IsItemHovered())
+                        ImGui.TableSetupColumn($"Stat", ImGuiTableColumnFlags.WidthFixed, 150);
+                        ImGui.TableSetupColumn($"Effect", ImGuiTableColumnFlags.WidthFixed, 50);
+                        ImGui.TableHeadersRow();
+
+                        // Effect Table
+                        foreach (var row in effects)
                         {
-                            ImGui.SetTooltip(row.EffectTooltip);
+                            ImGui.TableNextRow();
+                            ImGui.TableSetColumnIndex(0);
+                            ImGui.TextUnformatted(row.EffectName);
+                            if (ImGui.IsItemHovered())
+                            {
+                                ImGui.SetTooltip(row.EffectTooltip);
+                            }
+                            ImGui.TableSetColumnIndex(1);
+                            ImGui.TextUnformatted(row.EffectAmount);
                         }
-                        ImGui.TableSetColumnIndex(1);
-                        ImGui.TextUnformatted(row.EffectAmount);
+
+                        ImGui.EndTable();
+
                     }
-
-                    ImGui.EndTable();
-
-                }
-
+                } // end stat effect table
+                
             }
             ImGui.End();
         }
 
         public void DrawSettingsWindow()
         {
-            return; // no settings for this plugin yet
-            /*
+            
             if (!SettingsVisible)
             {
                 return;
             }
 
-            ImGui.SetNextWindowSize(new Vector2(232, 75), ImGuiCond.Always);
-            if (ImGui.Begin("Settings Window", ref this.settingsVisible,
+            ImGui.SetNextWindowSize(new Vector2(250, 200), ImGuiCond.Always);
+            if (ImGui.Begin("Substat Tiers Settings", ref this.settingsVisible,
                 ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
-                /*
-                // can't ref a property, so use a local copy
-                var configValue = this.configuration.SomePropertyToBeSavedAndWithADefault;
-                if (ImGui.Checkbox("Button That Does Nothing", ref configValue))
+                if (ImGui.Button("Show Substat Tier Window"))
                 {
-                    this.configuration.SomePropertyToBeSavedAndWithADefault = configValue;
+                    this.Visible = true;
+                }
+
+
+                // can't ref a property, so use a local copy
+                var configValue = this.configuration.ShowSubstatEffects;
+                if (ImGui.Checkbox("Show Substat Effect table", ref configValue))
+                {
+                    this.configuration.ShowSubstatEffects = configValue;
                     // can save immediately on change, if you don't want to provide a "Save and Close" button
                     this.configuration.Save();
                 }
-                ImGui.Text("There are no settings for this plugin (yet!).");
+
+                
+                var configValue2 = this.configuration.ShowMateriaTiers;
+                if (ImGui.Checkbox("Show Materia Tier table", ref configValue2))
+                {
+                    this.configuration.ShowMateriaTiers = configValue2;
+                    // can save immediately on change, if you don't want to provide a "Save and Close" button
+                    this.configuration.Save();
+                }
+
             }
             ImGui.End();
-            */
+            
         }
     }
 }
