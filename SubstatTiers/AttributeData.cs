@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using Dalamud;
 using Dalamud.Logging;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using Lumina.Excel.GeneratedSheets;
 
 namespace SubstatTiers
 {
@@ -41,6 +43,8 @@ namespace SubstatTiers
         internal int Defense { get; set; }
         internal int MagicDefense { get; set; }
         internal int Haste { get; set; }
+        internal int PhysicalWeaponDamage { get; set; }
+        internal int MagicalWeaponDamage { get; set; }
 
         // Non-battle specific
         internal int MaxGP { get; set; }
@@ -110,6 +114,11 @@ namespace SubstatTiers
 
             JobId = (JobThreeLetter)aState.CurrentClassJobId;
 
+            var w = InventoryManager.Instance()->GetInventoryContainer(InventoryType.EquippedItems)->Items[0].ItemID;
+            var p = Service.DataManager.GetExcelSheet<Item>()?.GetRow(w);
+            PhysicalWeaponDamage = p?.DamagePhys ?? 0;
+            MagicalWeaponDamage = p?.DamageMag ?? 0;
+
         }
 
         // Get a class/job's three letter identifier from its id (which is unique)
@@ -158,6 +167,8 @@ namespace SubstatTiers
                 _ => false,
             };
         }
+        internal int WeaponPower => UsesAttackPower() ? PhysicalWeaponDamage : MagicalWeaponDamage;
+        internal StatConstants.SubstatType SpeedType => UsesAttackPower() ? StatConstants.SubstatType.SkSpd : StatConstants.SubstatType.SpSpd;
         internal bool UsesCasterTraits()
         {
             return JobId switch
@@ -304,8 +315,6 @@ namespace SubstatTiers
             };
         }
 
-        //  instead, make a list of jobs and have methods for each modifier? lookup table by id
-        //
     }
 
     internal enum JobThreeLetter

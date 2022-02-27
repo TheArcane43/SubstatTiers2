@@ -181,9 +181,9 @@ namespace SubstatTiers
             };
         }
 
-        internal string[] GetTiers(Calculations calc, StatConstants.SubstatType type)
+        internal static string[] GetTiers(Calculations calc, StatConstants.SubstatType type)
         {
-            int level = calc.Level;
+            int level = calc.Data.Level;
             int[] tiers = MateriaTiersAt(level);
             Calculations calcOne = (Calculations)calc.Clone(tiers[0]);
             Calculations calcTwo = (Calculations)calc.Clone(tiers[1]);
@@ -210,7 +210,7 @@ namespace SubstatTiers
                 if (type == StatConstants.SubstatType.GCDmodified)
                 {
                     // divide all values by 4/(100-haste) => 1 gcd tier
-                    bonusTiers[i] = (int)(bonusTiers[i] / (400.0 / (100.0 - calc.HasteAmount)));
+                    bonusTiers[i] = (int)(bonusTiers[i] / (400.0 / (100.0 - calc.Data.HasteAmount())));
                 }
                 result[i] = bonusTiers[i].ToString("+0");
             }
@@ -237,4 +237,17 @@ namespace SubstatTiers
             };
         }
     }
+
+    internal class VisibleDamage
+    {
+        internal string DamageName { get; set; }
+        internal string DamageNumber { get; set; }
+
+        internal VisibleDamage(string name, int number)
+        {
+            DamageName = name;
+            DamageNumber = number.ToString("N0");
+        }
+    }
+
 }
