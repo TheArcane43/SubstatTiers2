@@ -2,7 +2,7 @@
   "Author": "TheArcane43",
   "Name": "Substat Tiers",
   "InternalName": "SubstatTiers",
-  "AssemblyVersion": "0.2.0.0",
+  "AssemblyVersion": "0.2.1.0",
   "RepoUrl": "https://github.com/TheArcane43/SubstatTiers2",
   "Description": "Gives a detailed table of how your substats work. Includes substat tiering, substat effects, and potential tier gains on materia.",
   "ApplicableVersion": "any",
