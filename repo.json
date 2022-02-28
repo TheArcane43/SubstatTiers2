@@ -3,13 +3,14 @@
     "Author": "TheArcane43",
     "Name": "Substat Tiers",
     "InternalName": "SubstatTiers",
-    "AssemblyVersion": "0.2.0.0",
+    "AssemblyVersion": "0.3.0.0",
     "RepoUrl": "https://github.com/TheArcane43/SubstatTiers2",
     "Description": "Gives a detailed table of how your substats work. Includes substat tiering, substat effects, and potential tier gains on materia.",
     "ApplicableVersion": "any",
     "Tags": [
       "substat",
-      "tiers"
+      "tiers",
+      "materia"
     ],
     "DalamudApiLevel": 5,
     "LoadPriority": 0,
@@ -17,9 +18,9 @@
     "LastUpdated": 0,
     "IsHide": "False",
     "DownloadCount": 0,
-    "DownloadLinkInstall": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.2.0.0/latest.zip",
-    "DownloadLinkTesting": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.2.0.0/latest.zip",
-    "DownloadLinkUpdate": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.2.0.0/latest.zip",
-    "Changelog": "Updated substat tables to show GCD tiers.\nAdded potential materia bonuses table.\nUpdated config file: you can choose which tables are displayed."
+    "DownloadLinkInstall": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.3.0.0/latest.zip",
+    "DownloadLinkTesting": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.3.0.0/latest.zip",
+    "DownloadLinkUpdate": "https://github.com/TheArcane43/SubstatTiers2/releases/download/v0.3.0.0/latest.zip",
+    "Changelog": "Includes an estimate of your damage per 100 potency.\nUpdated config file: you can choose which tables are displayed.\nYou can choose the layout of the plugin."
   }
 ]
