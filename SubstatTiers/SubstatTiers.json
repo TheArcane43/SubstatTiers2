@@ -14,5 +14,5 @@
   "DalamudApiLevel": 5,
   "LoadPriority": 0,
   "Punchline": "Shows how substats tier and what effects you get from them.",
-  "Changelog": "Includes an estimate of your damage per 100 potency.\nUpdated config file: you can choose which tables are displayed."
+  "Changelog": "Includes an estimate of your damage per 100 potency.\nUpdated config file: you can choose which tables are displayed.\nYou can choose the layout of the plugin."
 }
