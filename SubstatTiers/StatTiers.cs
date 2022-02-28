@@ -202,17 +202,15 @@ namespace SubstatTiers
             for (int i = 0; i < bonusTiers.Length; i++)
             {
                 // Correction for GCD
-                if (type == StatConstants.SubstatType.GCDbase)
+                if (type == StatConstants.SubstatType.GCDbase || type == StatConstants.SubstatType.GCDmodified)
                 {
                     // divide all values by 4 (4 speed tiers = 1 gcd tier)
+                    // technically not accurate for modified gcd (tiers vary between 4 and (5 or 6) based on job)
                     bonusTiers[i] = bonusTiers[i] / 4;
                 }
-                if (type == StatConstants.SubstatType.GCDmodified)
-                {
-                    // divide all values by 4/(100-haste) => 1 gcd tier
-                    bonusTiers[i] = (int)(bonusTiers[i] / (400.0 / (100.0 - calc.Data.HasteAmount())));
-                }
+                
                 result[i] = bonusTiers[i].ToString("+0");
+                
             }
 
             return result;

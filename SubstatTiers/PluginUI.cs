@@ -226,7 +226,8 @@ namespace SubstatTiers
 
                 ImGuiTableFlags flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.NoHostExtendX;
 
-                // Stat Table Setup
+                // Beginning of layout - grid(1)
+                // Stat Table -------------------------------------------------
                 if (ImGui.BeginTable("tableStats", 4, flags))
                 {
                     ImGui.TableSetupColumn($"{a.GetJobTL()} Lv{calc.Data.Level}", ImGuiTableColumnFlags.WidthFixed);
@@ -267,11 +268,22 @@ namespace SubstatTiers
                     ImGui.EndTable();
 
                 }
-                ImGui.SameLine();
+
+                
 
                 // Materia tiers table ----------------------------------------
                 if (configuration.ShowMateriaTiers)
                 {
+                    // This table to the right of previous table if horizontal or grid(2) layout
+                    if (configuration.LayoutType == 0 || configuration.LayoutType == 1)
+                    {
+                        ImGui.SameLine();
+                    }
+                    else // This table below previous table if vertical layout
+                    {
+                        ImGui.Spacing();
+                    }
+
                     // Materia table setup
                     if (ImGui.BeginTable("tableMateria", 5, flags))
                     {
@@ -303,13 +315,21 @@ namespace SubstatTiers
                     }
                 }
 
-                ImGui.Spacing();
-                ImGui.Spacing();
-
+                
                 // Stat Effects Table -----------------------------------------
 
                 if (configuration.ShowSubstatEffects)
                 {
+
+                    // This table to the right of previous table if horizontal layout or grid layout with previous table missing
+                    if (configuration.LayoutType == 0 || (configuration.LayoutType == 1 && !configuration.ShowMateriaTiers))
+                    {
+                        ImGui.SameLine();
+                    }
+                    else // This table below previous table if vertical or grid layout
+                    {
+                        ImGui.Spacing();
+                    }
 
                     // Effect Table Setup
                     if (ImGui.BeginTable("tableEffects", 2, flags))
@@ -337,27 +357,46 @@ namespace SubstatTiers
                     }
                 } // end stat effect table
 
-                ImGui.Spacing();
 
-                if (true) // configuration.ShowDamagePotency
+                if (configuration.ShowDamagePotency)
                 {
-                    // Potency Table setup
-                    if (ImGui.BeginTable("tablePotency", 2, flags))
+
+                    // This table to the right of previous table if horizontal or grid layout with all tables
+                    if (configuration.LayoutType == 0 || (configuration.LayoutType == 1 && configuration.ShowSubstatEffects && configuration.ShowMateriaTiers))
                     {
-                        ImGui.TableSetupColumn("Per 100 potency", ImGuiTableColumnFlags.WidthFixed);
-                        ImGui.TableSetupColumn("Amount", ImGuiTableColumnFlags.WidthFixed);
-                        ImGui.TableHeadersRow();
-                        foreach (var row in damageNums)
-                        {
-                            ImGui.TableNextRow();
-                            ImGui.TableSetColumnIndex(0);
-                            ImGui.TextUnformatted(row.DamageName);
-                            ImGui.TableSetColumnIndex(1);
-                            ImGui.TextUnformatted(row.DamageNumber);
-                        }
+                        ImGui.SameLine();
                     }
-                    ImGui.EndTable();
+                    else // This table below previous table if vertical layout or grid layout with missing table(s)
+                    {
+                        ImGui.Spacing();
+                    }
+
+                    // Blue mage's effective Magic Damage on weapon is some function of Intelligence (formula unknown)
+                    if (calc.Data.JobId == JobThreeLetter.BLU)
+                    {
+                        ImGui.Text("Blue Mage's damage potency numbers are not supported."); // Sorry!
+                    }
+                    else
+                    {
+                        // Potency Table setup
+                        if (ImGui.BeginTable("tablePotency", 2, flags))
+                        {
+                            ImGui.TableSetupColumn("Per 100 potency", ImGuiTableColumnFlags.WidthFixed);
+                            ImGui.TableSetupColumn("Amount", ImGuiTableColumnFlags.WidthFixed);
+                            ImGui.TableHeadersRow();
+                            foreach (var row in damageNums)
+                            {
+                                ImGui.TableNextRow();
+                                ImGui.TableSetColumnIndex(0);
+                                ImGui.TextUnformatted(row.DamageName);
+                                ImGui.TableSetColumnIndex(1);
+                                ImGui.TextUnformatted(row.DamageNumber);
+                            }
+                        }
+                        ImGui.EndTable();
+                    }
                 }
+                
             }
             ImGui.End();
         }
@@ -370,7 +409,7 @@ namespace SubstatTiers
                 return;
             }
 
-            ImGui.SetNextWindowSize(new Vector2(250, 200), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new Vector2(275, 200), ImGuiCond.Always);
             if (ImGui.Begin("Substat Tiers Settings", ref this.settingsVisible,
                 ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
@@ -394,8 +433,34 @@ namespace SubstatTiers
                 if (ImGui.Checkbox("Show Materia Tier table", ref configValue2))
                 {
                     this.configuration.ShowMateriaTiers = configValue2;
-                    // can save immediately on change, if you don't want to provide a "Save and Close" button
                     this.configuration.Save();
+                }
+
+                var configValue3 = this.configuration.ShowDamagePotency;
+                if (ImGui.Checkbox("Show Damage Potency", ref configValue3))
+                {
+                    this.configuration.ShowDamagePotency = configValue3;
+                    this.configuration.Save();
+                }
+
+                var configValue4 = this.configuration.LayoutType;
+                string[] layouts = { "Horizontal", "Grid", "Vertical" };
+                ImGui.SetNextItemWidth(100);
+                if (ImGui.BeginCombo("Layout", layouts[configValue4]))
+                {
+                    for (var i = 0; i < layouts.Length; i++)
+                    {
+                        bool is_selected = configValue4 == i;
+                        if (ImGui.Selectable(layouts[i], is_selected))
+                        {
+                            configValue4 = i;
+                            this.configuration.LayoutType = configValue4;
+                            this.configuration.Save();
+                        }
+                        // initial selection
+                        if (is_selected) ImGui.SetItemDefaultFocus();
+                    }
+                    ImGui.EndCombo();
                 }
 
             }

@@ -69,6 +69,7 @@ namespace SubstatTiers
         internal Calculations(AttributeData a)
         {
             Data = a;
+            Speed = Data.UsesAttackPower() ? Data.SkillSpeed : Data.SpellSpeed;
         }
 
         public object Clone()
@@ -91,9 +92,7 @@ namespace SubstatTiers
                 Piety = Data.Piety + modifier
             };
 
-            Calculations c = new(a);
-
-            return c;
+            return new Calculations(a);
         }
 
         internal double GetGCDbase() => Formulas.GCDFormula(GetUnits(Data.SpeedType), 0);
