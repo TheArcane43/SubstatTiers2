@@ -2,6 +2,7 @@
 using Dalamud.Data;
 using Lumina.Excel.GeneratedSheets;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using Dalamud.Logging;
 
 namespace SubstatTiers
 {
@@ -189,13 +190,17 @@ namespace SubstatTiers
             int det = FunctionDET();
             int tnc = Data.IsTank() ? FunctionTEN() : 1000;
             int wep = FunctionWD();
-            int tr = (int)Data.TraitAmount() * 100;
+            int tr = 100 + (int)(Data.TraitAmount() * 100);
             int crit = isCrit ? FunctionCRIT() : 1000;
             int dh = isDirect ? 125 : 100;
 
             // Formula (floor after every step): [potency * atk * det] / 100 / 1000 * tnc / 1000 * wep / 100 * trait / 100 * crit / 1000 * dh / 100
             int baseCalc = (int)Math.Floor(Math.Floor(Math.Floor(Math.Floor(pot * atk * det / 100000.0) * tnc / 1000.0) * wep / 100.0) * tr / 100.0);
             int procCalc = (int)Math.Floor(Math.Floor(baseCalc * crit / 1000.0) * dh / 100.0);
+
+            // Testing!
+            // PluginLog.Information($"Test calculations: {procCalc}");
+
             return procCalc;
         }
 
@@ -206,13 +211,17 @@ namespace SubstatTiers
             int dirDamage  = DamageFormula(false, true);
             int dcDamage = DamageFormula(true, true);
 
-            double critRate = GetUnits(StatConstants.SubstatType.Crit) / 1000 + 5.0;
-            double dirRate = GetUnits(StatConstants.SubstatType.Direct) / 1000;
+            double critRate = GetUnits(StatConstants.SubstatType.Crit) / 1000.0 + 0.05;
+            double dirRate = GetUnits(StatConstants.SubstatType.Direct) / 1000.0;
             double dcRate = critRate * dirRate;
             double trueCritRate = critRate - dcRate;
             double trueDirRate = dirRate - dcRate;
             double noneRate = 1 - trueCritRate - trueDirRate - dcRate;
-            
+
+            // Testing!
+            // PluginLog.Information($"{noneRate:F3}\t{critRate:F3}\t{dirRate:F3}\t{dcRate:F3}");
+            // PluginLog.Information($"{baseDamage}\t{critDamage}\t{dirDamage}\t{dcDamage}");
+
             return (int)(noneRate * baseDamage + trueCritRate * critDamage + trueDirRate * dirDamage + dcRate * dcDamage);
         }
 

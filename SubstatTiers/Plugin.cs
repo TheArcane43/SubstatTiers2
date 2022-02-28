@@ -23,6 +23,7 @@ namespace SubstatTiers
         {
             this.PluginInterface = pluginInterface;
             this.CommandManager = commandManager;
+            Service.Initialize(pluginInterface);
 
             this.Configuration = this.PluginInterface.GetPluginConfig() as Configuration ?? new Configuration();
             this.Configuration.Initialize(this.PluginInterface);

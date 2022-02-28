@@ -114,10 +114,20 @@ namespace SubstatTiers
 
             JobId = (JobThreeLetter)aState.CurrentClassJobId;
 
-            var w = InventoryManager.Instance()->GetInventoryContainer(InventoryType.EquippedItems)->Items[0].ItemID;
+            var r = InventoryManager.Instance()->GetInventoryContainer(InventoryType.EquippedItems)->Items[0];
+            var w = r.ItemID;
+
             var p = Service.DataManager.GetExcelSheet<Item>()?.GetRow(w);
             PhysicalWeaponDamage = p?.DamagePhys ?? 0;
             MagicalWeaponDamage = p?.DamageMag ?? 0;
+
+            if (r.Flags.HasFlag(InventoryItem.ItemFlags.HQ))
+            {
+                PhysicalWeaponDamage = (int)Math.Round(PhysicalWeaponDamage * 1.1117);
+                MagicalWeaponDamage = (int)Math.Round(MagicalWeaponDamage * 1.1117);
+            }
+
+            // PluginLog.Information($"Rounding check: {PhysicalWeaponDamage}");
 
         }
 

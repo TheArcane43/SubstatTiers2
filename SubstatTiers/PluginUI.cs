@@ -98,7 +98,7 @@ namespace SubstatTiers
 
                 // Main table -------------------------------------------------
 
-                ImGui.Text("Effects only consider traits and GCD buffs/traits.");
+                ImGui.Text("Effects only consider traits, GCD buffs/traits, and any active stat buffs. (e.g. food)");
                 ImGui.Text("Substats unrelated to this class/job are excluded.");
 
                 int unitsCritHit = calc.GetUnits(StatConstants.SubstatType.Crit);
@@ -216,11 +216,11 @@ namespace SubstatTiers
 
                 // List of damage potencies
                 List<VisibleDamage> damageNums = new();
-                damageNums.Add(new VisibleDamage("Damage per 100 potency", calc.DamageFormula(false, false)));
-                damageNums.Add(new VisibleDamage("Damage per 100 potency (Critical)", calc.DamageFormula(true, false)));
-                damageNums.Add(new VisibleDamage("Damage per 100 potency (Direct Hit)", calc.DamageFormula(false, true)));
-                damageNums.Add(new VisibleDamage("Damage per 100 potency (Critical Direct Hit)", calc.DamageFormula(true, true)));
-                damageNums.Add(new VisibleDamage("Average damage per 100 potency", calc.DamageAverage()));
+                damageNums.Add(new VisibleDamage("Normal Damage", calc.DamageFormula(false, false)));
+                damageNums.Add(new VisibleDamage("Damage on Critical Hits", calc.DamageFormula(true, false)));
+                damageNums.Add(new VisibleDamage("Damage on Direct Hits", calc.DamageFormula(false, true)));
+                damageNums.Add(new VisibleDamage("Damage on Critical Direct Hits", calc.DamageFormula(true, true)));
+                damageNums.Add(new VisibleDamage("Average Damage per 100 potency", calc.DamageAverage()));
 
                 ImGui.Spacing();
 
@@ -337,11 +337,16 @@ namespace SubstatTiers
                     }
                 } // end stat effect table
 
+                ImGui.Spacing();
+
                 if (true) // configuration.ShowDamagePotency
                 {
                     // Potency Table setup
                     if (ImGui.BeginTable("tablePotency", 2, flags))
                     {
+                        ImGui.TableSetupColumn("Per 100 potency", ImGuiTableColumnFlags.WidthFixed);
+                        ImGui.TableSetupColumn("Amount", ImGuiTableColumnFlags.WidthFixed);
+                        ImGui.TableHeadersRow();
                         foreach (var row in damageNums)
                         {
                             ImGui.TableNextRow();
