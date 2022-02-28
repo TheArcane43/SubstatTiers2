@@ -2,16 +2,17 @@
   "Author": "TheArcane43",
   "Name": "Substat Tiers",
   "InternalName": "SubstatTiers",
-  "AssemblyVersion": "0.2.0.0",
+  "AssemblyVersion": "0.3.0.0",
   "RepoUrl": "https://github.com/TheArcane43/SubstatTiers2",
   "Description": "Gives a detailed table of how your substats work. Includes substat tiering, substat effects, and potential tier gains on materia.",
   "ApplicableVersion": "any",
   "Tags": [
     "substat",
-    "tiers"
+    "tiers",
+    "materia"
   ],
   "DalamudApiLevel": 5,
   "LoadPriority": 0,
   "Punchline": "Shows how substats tier and what effects you get from them.",
-  "Changelog": "Updated substat tables to show GCD tiers.\nAdded potential materia bonuses table.\nUpdated config file: you can choose which tables are displayed."
+  "Changelog": "Includes an estimate of your damage per 100 potency.\nUpdated config file: you can choose which tables are displayed.\nYou can choose the layout of the plugin."
 }

@@ -1,23 +1,17 @@
 ﻿using System;
+using Dalamud.Data;
+using Lumina.Excel.GeneratedSheets;
+using FFXIVClientStructs.FFXIV.Client.Game;
+using Dalamud.Logging;
 
 namespace SubstatTiers
 {
     public class Calculations : ICloneable
     {
-        internal int Level { get; set; } = 90;
-        internal int CritHit { get; set; } = 400;
-        internal int Determination { get; set; } = 390;
-        internal int DirectHit { get; set; } = 400;
 
-        internal int SkillSpeed { get; set; } = 400;
-        internal int SpellSpeed { get; set; } = 400;
+        internal AttributeData Data { get; set; }
+
         internal int Speed { get; set; } = 400;
-
-        internal int Tenacity { get; set; } = 400;
-        internal int Piety { get; set; } = 390;
-
-        internal StatConstants.SubstatType SpeedType = 0;
-        internal int HasteAmount = 0;
 
         internal int GetUnits(StatConstants.SubstatType substat)
         {
@@ -31,13 +25,13 @@ namespace SubstatTiers
             }
             int stat = substat switch
             {
-                StatConstants.SubstatType.Crit => CritHit,
-                StatConstants.SubstatType.Det => Determination,
-                StatConstants.SubstatType.Direct => DirectHit,
-                StatConstants.SubstatType.SkSpd => SkillSpeed,
-                StatConstants.SubstatType.SpSpd => SpellSpeed,
-                StatConstants.SubstatType.Ten => Tenacity,
-                StatConstants.SubstatType.Piety => Piety,
+                StatConstants.SubstatType.Crit => Data.CriticalHit,
+                StatConstants.SubstatType.Det => Data.Determination,
+                StatConstants.SubstatType.Direct => Data.DirectHit,
+                StatConstants.SubstatType.SkSpd => Data.SkillSpeed,
+                StatConstants.SubstatType.SpSpd => Data.SpellSpeed,
+                StatConstants.SubstatType.Ten => Data.Tenacity,
+                StatConstants.SubstatType.Piety => Data.Piety,
                 _ => 1,
             };
             int coeff = substat switch
@@ -52,7 +46,7 @@ namespace SubstatTiers
                 _ => 1,
             };
 
-            return Formulas.StatFormula(StatConstants.GetDivAtLevel(this.Level), stat, StatConstants.GetBaseStatAtLevel(this.Level, substat), coeff);
+            return Formulas.StatFormula(StatConstants.GetDivAtLevel(Data.Level), stat, StatConstants.GetBaseStatAtLevel(Data.Level, substat), coeff);
         }
 
         internal int GetStatsFromUnits(StatConstants.SubstatType substat, int units)
@@ -69,29 +63,13 @@ namespace SubstatTiers
                 _ => 1,
             };
 
-            return Formulas.ReverseStatFormula(StatConstants.GetDivAtLevel(this.Level), units, StatConstants.GetBaseStatAtLevel(this.Level, substat), coeff);
-        }
-
-        internal Calculations()
-        {
-            // Use default values
+            return Formulas.ReverseStatFormula(StatConstants.GetDivAtLevel(Data.Level), units, StatConstants.GetBaseStatAtLevel(Data.Level, substat), coeff);
         }
 
         internal Calculations(AttributeData a)
         {
-            Level = a.Level;
-            CritHit = a.CriticalHit;
-            Determination = a.Determination;
-            DirectHit = a.DirectHit;
-            SkillSpeed = a.SkillSpeed;
-            SpellSpeed = a.SpellSpeed;
-            Tenacity = a.Tenacity;
-            Piety = a.Piety;
-
-            SpeedType = a.UsesAttackPower() ? StatConstants.SubstatType.SkSpd : StatConstants.SubstatType.SpSpd;
-            Speed = a.UsesAttackPower() ? SkillSpeed : SpellSpeed;
-            HasteAmount = a.HasteAmount();
-
+            Data = a;
+            Speed = Data.UsesAttackPower() ? Data.SkillSpeed : Data.SpellSpeed;
         }
 
         public object Clone()
@@ -101,29 +79,169 @@ namespace SubstatTiers
 
         public object Clone(int modifier)
         {
-            Calculations c = new();
-            c.Level = this.Level;
-            c.CritHit = this.CritHit + modifier;
-            c.Determination = this.Determination + modifier;
-            c.DirectHit = this.DirectHit + modifier;
-            c.SkillSpeed = this.SkillSpeed + modifier;
-            c.SpellSpeed = this.SpellSpeed + modifier;
-            c.Tenacity = this.Tenacity + modifier;
-            c.Piety = this.Piety + modifier;
-            c.Speed = this.Speed + modifier;
-            c.SpeedType = this.SpeedType;
-            c.HasteAmount = this.HasteAmount;
+
+            AttributeData a = new()
+            {
+                Level = Data.Level,
+                CriticalHit = Data.CriticalHit + modifier,
+                Determination = Data.Determination + modifier,
+                DirectHit = Data.DirectHit + modifier,
+                SkillSpeed = Data.SkillSpeed + modifier,
+                SpellSpeed = Data.SpellSpeed + modifier,
+                Tenacity = Data.Tenacity + modifier,
+                Piety = Data.Piety + modifier
+            };
+
+            return new Calculations(a);
+        }
+
+        internal double GetGCDbase() => Formulas.GCDFormula(GetUnits(Data.SpeedType), 0);
+        internal double GetGCDmodified() => Formulas.GCDFormula(GetUnits(Data.SpeedType), Data.HasteAmount());
+        internal int GetSpeedUnitsOfGCDbase() => Formulas.ReverseGCDFormula(GetGCDbase(), 0);
+        internal int GetSpeedUnitsOfGCDmodified() => Formulas.ReverseGCDFormula(GetGCDmodified(), Data.HasteAmount());
+        internal int GetSpeedUnitsOfNextGCDbase() => Formulas.ReverseGCDFormula(GetGCDbase() - 0.010000001, 0);
+        internal int GetSpeedUnitsOfNextGCDmodified() => Formulas.ReverseGCDFormula(GetGCDmodified() - 0.010000001, Data.HasteAmount());
+        // NOTE: due to rounding and/or float precision, the 0.010000001 is necessary to actually move to the next GCD
+        //   don't know which one it is, but it doesn't seem to break anything else
+
+        internal int FunctionWD()
+        {
+            int job = Data.AttackMod();
+            int main = StatTiers.GetStat(Data.Level, StatTiers.DataType.Main);
+            int weapon = Data.WeaponPower;
+
+            return (int)(Math.Floor(main * job / 1000.0) + weapon);
+        }
+        private static int AttackConstant(bool isTank, int level)
+        {
+            int c = level switch
+            {
+                <= 50 => 75,
+                <= 70 => (int)Math.Floor(2.5 * (level - 50)) + 75,
+                <= 80 => 4 * (level - 70) + 125,
+                <= 90 => 3 * (level - 80) + 165,
+                _ => 195,
+            };
+            if (isTank)
+            {
+                c *= 1; // Tank correction not confirmed yet, believed to be 0.7x
+            }
             return c;
         }
 
-        internal double GetGCDbase() => Formulas.GCDFormula(GetUnits(SpeedType), 0);
-        internal double GetGCDmodified() => Formulas.GCDFormula(GetUnits(SpeedType), HasteAmount);
-        internal int GetSpeedUnitsOfGCDbase() => Formulas.ReverseGCDFormula(GetGCDbase(), 0);
-        internal int GetSpeedUnitsOfGCDmodified() => Formulas.ReverseGCDFormula(GetGCDmodified(), HasteAmount);
-        internal int GetSpeedUnitsOfNextGCDbase() => Formulas.ReverseGCDFormula(GetGCDbase() - 0.010000001, 0);
-        internal int GetSpeedUnitsOfNextGCDmodified() => Formulas.ReverseGCDFormula(GetGCDmodified() - 0.010000001, HasteAmount);
-        // NOTE: due to rounding and/or float precision, the 0.010000001 is necessary to actually move to the next GCD
-        //   don't know which one it is, but it doesn't seem to break anything else
+        private int FunctionAP()
+        {
+            int atkConstant = AttackConstant(Data.IsTank(), Data.Level);
+            int att = Data.UsesAttackPower() ? Data.AttackPower : Data.AttackMagicPotency;
+            int main = StatTiers.GetStat(Data.Level, StatTiers.DataType.Main);
+
+            return (int)(Math.Floor(atkConstant * (att - main) / (double)main) + 100);
+        }
+
+        // Returns 1000 + tiers of determination
+        private int FunctionDET()
+        {
+            int det = Data.Determination;
+            int main = StatTiers.GetStat(Data.Level, StatTiers.DataType.Main);
+            int div = StatTiers.GetStat(Data.Level, StatTiers.DataType.Div);
+            int coeff = StatConstants.DeterminationCoeff;
+
+            return (int)(Math.Floor(coeff * (det - main) / (double)div) + 1000);
+        }
+
+        // Returns 1000 + tiers of tenacity
+        private int FunctionTEN()
+        {
+            int ten = Data.Tenacity;
+            int sub = StatTiers.GetStat(Data.Level, StatTiers.DataType.Sub);
+            int div = StatTiers.GetStat(Data.Level, StatTiers.DataType.Div);
+            int coeff = StatConstants.TenacityCoeff;
+
+            return (int)(Math.Floor(coeff * (ten - sub) / (double)div) + 1000);
+        }
+
+        // Returns 1000 + tiers of speed
+        private int FunctionSPD()
+        {
+            int spd = Data.UsesAttackPower() ? Data.SkillSpeed : Data.SpellSpeed;
+            int sub = StatTiers.GetStat(Data.Level, StatTiers.DataType.Sub);
+            int div = StatTiers.GetStat(Data.Level, StatTiers.DataType.Div);
+            int coeff = Data.UsesAttackPower() ? StatConstants.SkillCoeff : StatConstants.SpellCoeff;
+
+            return (int)(Math.Floor(coeff * (spd - sub) / (double)div) + 1000);
+        }
+
+        // Returns 1400 + tiers of critical hit (base crit damage is 40.0%)
+        private int FunctionCRIT()
+        {
+            int crit = Data.CriticalHit;
+            int sub = StatTiers.GetStat(Data.Level, StatTiers.DataType.Sub);
+            int div = StatTiers.GetStat(Data.Level, StatTiers.DataType.Div);
+            int coeff = StatConstants.CritCoeff;
+
+            return (int)(Math.Floor(coeff * (crit - sub) / (double)div) + 1400);
+        }
+
+        internal int DamageFormula(bool isCrit, bool isDirect)
+        {
+            int pot = 100;
+            int atk = FunctionAP();
+            int det = FunctionDET();
+            int tnc = Data.IsTank() ? FunctionTEN() : 1000;
+            int wep = FunctionWD();
+            int tr = 100 + (int)(Data.TraitAmount() * 100);
+            int crit = isCrit ? FunctionCRIT() : 1000;
+            int dh = isDirect ? 125 : 100;
+
+            // Formula (floor after every step): [potency * atk * det] / 100 / 1000 * tnc / 1000 * wep / 100 * trait / 100 * crit / 1000 * dh / 100
+            int baseCalc = (int)Math.Floor(Math.Floor(Math.Floor(Math.Floor(pot * atk * det / 100000.0) * tnc / 1000.0) * wep / 100.0) * tr / 100.0);
+            int procCalc = (int)Math.Floor(Math.Floor(baseCalc * crit / 1000.0) * dh / 100.0);
+
+            // Testing!
+            // PluginLog.Information($"Test calculations: {procCalc}");
+
+            return procCalc;
+        }
+
+        internal int DamageAverage()
+        {
+            int baseDamage = DamageFormula(false, false);
+            int critDamage = DamageFormula(true, false);
+            int dirDamage  = DamageFormula(false, true);
+            int dcDamage = DamageFormula(true, true);
+
+            double critRate = GetUnits(StatConstants.SubstatType.Crit) / 1000.0 + 0.05;
+            double dirRate = GetUnits(StatConstants.SubstatType.Direct) / 1000.0;
+            double dcRate = critRate * dirRate;
+            double trueCritRate = critRate - dcRate;
+            double trueDirRate = dirRate - dcRate;
+            double noneRate = 1 - trueCritRate - trueDirRate - dcRate;
+
+            // Testing!
+            // PluginLog.Information($"{noneRate:F3}\t{critRate:F3}\t{dirRate:F3}\t{dcRate:F3}");
+            // PluginLog.Information($"{baseDamage}\t{critDamage}\t{dirDamage}\t{dcDamage}");
+
+            return (int)(noneRate * baseDamage + trueCritRate * critDamage + trueDirRate * dirDamage + dcRate * dcDamage);
+        }
+
+        internal int DamageOverTimeFormula(bool isCrit, bool isDirect)
+        {
+            int pot = 100;
+            int atk = FunctionAP();
+            int det = FunctionDET();
+            int tnc = Data.IsTank() ? FunctionTEN() : 1000;
+            int wep = FunctionWD();
+            int tr = (int)Data.TraitAmount() * 100;
+            int crit = isCrit ? FunctionCRIT() : 1000;
+            int dh = isDirect ? 125 : 100;
+            int spd = FunctionSPD();
+
+            // Formula (floor after every step): [see calculations below]
+            int baseCalc = (int)Math.Floor(Math.Floor(Math.Floor(pot * atk * det / 100000.0) * tnc / 1000.0) * wep / 100.0);
+            int speedCalc = (int)Math.Floor(Math.Floor(Math.Floor(baseCalc * spd / 1000.0) * tr / 100.0) + 1);
+            int randCalc = (int)Math.Floor(Math.Floor(Math.Floor(speedCalc * crit / 1000.0) * dh / 100.0));
+            return randCalc;
+        }
 
     }
 
@@ -198,7 +316,7 @@ namespace SubstatTiers
 
     }
 
-    internal class Formulas
+    internal static class Formulas
     {
         // Given the stat, return the number of tiers
         internal static int StatFormula(int div, int stat, int baseStat, int coeff)
@@ -213,51 +331,6 @@ namespace SubstatTiers
             return (int)(Math.Ceiling((double)(units * div) / coeff) + baseStat);
         }
 
-        private static int WeaponDamageFormula(int main, int job, int weapon)
-        {
-            return (int)(Math.Floor(main * job / 1000.0) + weapon);
-        }
-
-        private static int AttackPower(int att, int main)
-        {
-            double someConstant = 165.0;
-            return (int)(Math.Floor(someConstant * (att - main) / main) + 100);
-        }
-
-        private static int AutoPower(int main, int job, int weapon, double delay)
-        {
-            return (int)(Math.Floor(Math.Floor(main * job / 1000.0) + weapon) * delay / 3.00);
-        }
-
-        private static int DamageFormula(int pot, int atk, int det, int tnc, int wep, int tr, int crit, int dh, double buffs)
-        {
-            // Formula (floor after every step): [potency * atk * det] / 100 / 1000 * tnc / 1000 * wep / 100 * trait / 100 * crit / 1000 * dh / 100 * rand[95,105] / 100 * buffs
-            //int result = 0;
-            int baseCalc = (int)Math.Floor(Math.Floor(Math.Floor(Math.Floor(pot * atk * det / 100000.0) * tnc / 1000.0) * wep / 100.0) * tr / 100.0);
-            int procCalc = (int)Math.Floor(Math.Floor(baseCalc * crit / 1000.0) * dh / 100.0);
-            int randCalc = (int)Math.Floor(Math.Floor(procCalc * 100.0/*random number*/ / 100.0) * buffs);
-            return randCalc;
-        }
-
-        private static int DamageOverTimeFormula(int pot, int atk, int det, int tnc, int wep, int tr, int crit, int dh, int buffs, int spd)
-        {
-            // Formula (floor after every step): ([potency * atk * det] / 100 / 1000 * tnc / 1000 * wep / 100 * spd / 1000 * trait / 100 + 1) * rand[95,105] ... [see damage formula]
-            int baseCalc = (int)Math.Floor(Math.Floor(Math.Floor(pot * atk * det / 100000.0) * tnc / 1000.0) * wep / 100.0);
-            int speedCalc = (int)Math.Floor(Math.Floor(Math.Floor(baseCalc * spd / 1000.0) * tr / 100.0) + 1);
-            int randCalc = (int)Math.Floor(Math.Floor(Math.Floor(Math.Floor(speedCalc * 100.0/*random*/ / 100.0) * crit / 1000.0) * dh / 100.0) * buffs);
-            return randCalc;
-
-        }
-
-        private static int AutoAttackFormula(int pot, int atk, int det, int tnc, int autopow, int tr, int crit, int dh, double buffs, int spd)
-        {
-            // Formula (floor after every step): [same as damage formula but with (autopow * spd / 1000) instead of (wep)
-            // note: bard and machinist have pot=100, all others have pot=110
-            int baseCalc = (int)Math.Floor(Math.Floor(Math.Floor(Math.Floor(pot * atk * det / 100000.0) * tnc / 1000.0) * autopow * spd / 1000.0) * tr / 100.0);
-            int procCalc = (int)Math.Floor(Math.Floor(baseCalc * crit / 1000.0) * dh / 100.0);
-            int randCalc = (int)Math.Floor(Math.Floor(procCalc * 100.0/*random*/ / 100.0) * buffs);
-            return randCalc;
-        }
 
         // Given units of speed and haste percent, return GCD
         internal static double GCDFormula(int units, int haste)

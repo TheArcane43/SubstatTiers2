@@ -98,7 +98,7 @@ namespace SubstatTiers
 
                 // Main table -------------------------------------------------
 
-                ImGui.Text("Effects only consider traits and GCD buffs/traits.");
+                ImGui.Text("Effects only consider traits, GCD buffs/traits, and any active stat buffs. (e.g. food)");
                 ImGui.Text("Substats unrelated to this class/job are excluded.");
 
                 int unitsCritHit = calc.GetUnits(StatConstants.SubstatType.Crit);
@@ -116,8 +116,8 @@ namespace SubstatTiers
                 int prevSpellSpeed = calc.GetStatsFromUnits(StatConstants.SubstatType.SpSpd, unitsSpellSpeed);
                 int prevTenacity = calc.GetStatsFromUnits(StatConstants.SubstatType.Ten, unitsTenacity);
                 int prevPiety = calc.GetStatsFromUnits(StatConstants.SubstatType.Piety, unitsPiety);
-                int prevGCDBase = calc.GetStatsFromUnits(calc.SpeedType, calc.GetSpeedUnitsOfGCDbase());
-                int prevGCDModified = calc.GetStatsFromUnits(calc.SpeedType, calc.GetSpeedUnitsOfGCDmodified());
+                int prevGCDBase = calc.GetStatsFromUnits(calc.Data.SpeedType, calc.GetSpeedUnitsOfGCDbase());
+                int prevGCDModified = calc.GetStatsFromUnits(calc.Data.SpeedType, calc.GetSpeedUnitsOfGCDmodified());
 
                 int nextCritHit = calc.GetStatsFromUnits(StatConstants.SubstatType.Crit, unitsCritHit + 1);
                 int nextDetermination = calc.GetStatsFromUnits(StatConstants.SubstatType.Det, unitsDetermination + 1);
@@ -126,30 +126,30 @@ namespace SubstatTiers
                 int nextSpellSpeed = calc.GetStatsFromUnits(StatConstants.SubstatType.SpSpd, unitsSpellSpeed + 1);
                 int nextTenacity = calc.GetStatsFromUnits(StatConstants.SubstatType.Ten, unitsTenacity + 1);
                 int nextPiety = calc.GetStatsFromUnits(StatConstants.SubstatType.Piety, unitsPiety + 1);
-                int nextGCDBase = calc.GetStatsFromUnits(calc.SpeedType, calc.GetSpeedUnitsOfNextGCDbase());
-                int nextGCDModified = calc.GetStatsFromUnits(calc.SpeedType, calc.GetSpeedUnitsOfNextGCDmodified());
+                int nextGCDBase = calc.GetStatsFromUnits(calc.Data.SpeedType, calc.GetSpeedUnitsOfNextGCDbase());
+                int nextGCDModified = calc.GetStatsFromUnits(calc.Data.SpeedType, calc.GetSpeedUnitsOfNextGCDmodified());
 
 
                 // List of stats/tiers
                 List<VisibleInfo> statList = new();
-                statList.Add(new VisibleInfo(StatConstants.SubstatType.Crit.VisibleName(), calc.CritHit, calc.CritHit - prevCritHit, nextCritHit - calc.CritHit));
-                statList.Add(new VisibleInfo(StatConstants.SubstatType.Det.VisibleName(), calc.Determination, calc.Determination - prevDetermination, nextDetermination - calc.Determination));
-                statList.Add(new VisibleInfo(StatConstants.SubstatType.Direct.VisibleName(), calc.DirectHit, calc.DirectHit - prevDirectHit, nextDirectHit - calc.DirectHit));
+                statList.Add(new VisibleInfo(StatConstants.SubstatType.Crit.VisibleName(), calc.Data.CriticalHit, calc.Data.CriticalHit - prevCritHit, nextCritHit - calc.Data.CriticalHit));
+                statList.Add(new VisibleInfo(StatConstants.SubstatType.Det.VisibleName(), calc.Data.Determination, calc.Data.Determination - prevDetermination, nextDetermination - calc.Data.Determination));
+                statList.Add(new VisibleInfo(StatConstants.SubstatType.Direct.VisibleName(), calc.Data.DirectHit, calc.Data.DirectHit - prevDirectHit, nextDirectHit - calc.Data.DirectHit));
                 if (a.UsesAttackPower())
                 {
-                    statList.Add(new VisibleInfo(StatConstants.SubstatType.SkSpd.VisibleName(), calc.SkillSpeed, calc.SkillSpeed - prevSkillSpeed, nextSkillSpeed - calc.SkillSpeed));
+                    statList.Add(new VisibleInfo(StatConstants.SubstatType.SkSpd.VisibleName(), calc.Data.SkillSpeed, calc.Data.SkillSpeed - prevSkillSpeed, nextSkillSpeed - calc.Data.SkillSpeed));
                 }
                 else
                 {
-                    statList.Add(new VisibleInfo(StatConstants.SubstatType.SpSpd.VisibleName(), calc.SpellSpeed, calc.SpellSpeed - prevSpellSpeed, nextSpellSpeed - calc.SpellSpeed));
+                    statList.Add(new VisibleInfo(StatConstants.SubstatType.SpSpd.VisibleName(), calc.Data.SpellSpeed, calc.Data.SpellSpeed - prevSpellSpeed, nextSpellSpeed - calc.Data.SpellSpeed));
                 }
                 if (a.IsTank())
                 {
-                    statList.Add(new VisibleInfo(StatConstants.SubstatType.Ten.VisibleName(), calc.Tenacity, calc.Tenacity - prevTenacity, nextTenacity - calc.Tenacity));
+                    statList.Add(new VisibleInfo(StatConstants.SubstatType.Ten.VisibleName(), calc.Data.Tenacity, calc.Data.Tenacity - prevTenacity, nextTenacity - calc.Data.Tenacity));
                 }
                 if (a.IsHealer())
                 {
-                    statList.Add(new VisibleInfo(StatConstants.SubstatType.Piety.VisibleName(), calc.Piety, calc.Piety - prevPiety, nextPiety - calc.Piety));
+                    statList.Add(new VisibleInfo(StatConstants.SubstatType.Piety.VisibleName(), calc.Data.Piety, calc.Data.Piety - prevPiety, nextPiety - calc.Data.Piety));
                 }
 
                 statList.Add(new VisibleInfo("GCD(Base)", calc.GetGCDbase(), calc.Speed - prevGCDBase, nextGCDBase - calc.Speed));
@@ -189,7 +189,6 @@ namespace SubstatTiers
 
                 // List of materia tiers
                 List<VisibleMateria> materiaTiers = new();
-
                 materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Crit));
                 materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Det));
                 materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Direct));
@@ -215,15 +214,23 @@ namespace SubstatTiers
                     materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.GCDmodified));
                 }
 
+                // List of damage potencies
+                List<VisibleDamage> damageNums = new();
+                damageNums.Add(new VisibleDamage("Normal Damage", calc.DamageFormula(false, false)));
+                damageNums.Add(new VisibleDamage("Damage on Critical Hits", calc.DamageFormula(true, false)));
+                damageNums.Add(new VisibleDamage("Damage on Direct Hits", calc.DamageFormula(false, true)));
+                damageNums.Add(new VisibleDamage("Damage on Critical Direct Hits", calc.DamageFormula(true, true)));
+                damageNums.Add(new VisibleDamage("Average Damage per 100 potency", calc.DamageAverage()));
 
                 ImGui.Spacing();
 
                 ImGuiTableFlags flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.NoHostExtendX;
 
-                // Stat Table Setup
+                // Beginning of layout - grid(1)
+                // Stat Table -------------------------------------------------
                 if (ImGui.BeginTable("tableStats", 4, flags))
                 {
-                    ImGui.TableSetupColumn($"{a.GetJobTL()} Lv{calc.Level}", ImGuiTableColumnFlags.WidthFixed);
+                    ImGui.TableSetupColumn($"{a.GetJobTL()} Lv{calc.Data.Level}", ImGuiTableColumnFlags.WidthFixed);
                     ImGui.TableSetupColumn($"Stat", ImGuiTableColumnFlags.WidthFixed, 50);
                     ImGui.TableSetupColumn($"Over", ImGuiTableColumnFlags.WidthFixed, 40);
                     ImGui.TableSetupColumn($"Next", ImGuiTableColumnFlags.WidthFixed, 40);
@@ -261,11 +268,22 @@ namespace SubstatTiers
                     ImGui.EndTable();
 
                 }
-                ImGui.SameLine();
+
+                
 
                 // Materia tiers table ----------------------------------------
                 if (configuration.ShowMateriaTiers)
                 {
+                    // This table to the right of previous table if horizontal or grid(2) layout
+                    if (configuration.LayoutType == 0 || configuration.LayoutType == 1)
+                    {
+                        ImGui.SameLine();
+                    }
+                    else // This table below previous table if vertical layout
+                    {
+                        ImGui.Spacing();
+                    }
+
                     // Materia table setup
                     if (ImGui.BeginTable("tableMateria", 5, flags))
                     {
@@ -297,13 +315,21 @@ namespace SubstatTiers
                     }
                 }
 
-                ImGui.Spacing();
-                ImGui.Spacing();
-
+                
                 // Stat Effects Table -----------------------------------------
 
                 if (configuration.ShowSubstatEffects)
                 {
+
+                    // This table to the right of previous table if horizontal layout or grid layout with previous table missing
+                    if (configuration.LayoutType == 0 || (configuration.LayoutType == 1 && !configuration.ShowMateriaTiers))
+                    {
+                        ImGui.SameLine();
+                    }
+                    else // This table below previous table if vertical or grid layout
+                    {
+                        ImGui.Spacing();
+                    }
 
                     // Effect Table Setup
                     if (ImGui.BeginTable("tableEffects", 2, flags))
@@ -330,6 +356,46 @@ namespace SubstatTiers
 
                     }
                 } // end stat effect table
+
+
+                if (configuration.ShowDamagePotency)
+                {
+
+                    // This table to the right of previous table if horizontal or grid layout with all tables
+                    if (configuration.LayoutType == 0 || (configuration.LayoutType == 1 && configuration.ShowSubstatEffects && configuration.ShowMateriaTiers))
+                    {
+                        ImGui.SameLine();
+                    }
+                    else // This table below previous table if vertical layout or grid layout with missing table(s)
+                    {
+                        ImGui.Spacing();
+                    }
+
+                    // Blue mage's effective Magic Damage on weapon is some function of Intelligence (formula unknown)
+                    if (calc.Data.JobId == JobThreeLetter.BLU)
+                    {
+                        ImGui.Text("Blue Mage's damage potency numbers are not supported."); // Sorry!
+                    }
+                    else
+                    {
+                        // Potency Table setup
+                        if (ImGui.BeginTable("tablePotency", 2, flags))
+                        {
+                            ImGui.TableSetupColumn("Per 100 potency", ImGuiTableColumnFlags.WidthFixed);
+                            ImGui.TableSetupColumn("Amount", ImGuiTableColumnFlags.WidthFixed);
+                            ImGui.TableHeadersRow();
+                            foreach (var row in damageNums)
+                            {
+                                ImGui.TableNextRow();
+                                ImGui.TableSetColumnIndex(0);
+                                ImGui.TextUnformatted(row.DamageName);
+                                ImGui.TableSetColumnIndex(1);
+                                ImGui.TextUnformatted(row.DamageNumber);
+                            }
+                        }
+                        ImGui.EndTable();
+                    }
+                }
                 
             }
             ImGui.End();
@@ -343,7 +409,7 @@ namespace SubstatTiers
                 return;
             }
 
-            ImGui.SetNextWindowSize(new Vector2(250, 200), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new Vector2(275, 200), ImGuiCond.Always);
             if (ImGui.Begin("Substat Tiers Settings", ref this.settingsVisible,
                 ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
@@ -367,8 +433,34 @@ namespace SubstatTiers
                 if (ImGui.Checkbox("Show Materia Tier table", ref configValue2))
                 {
                     this.configuration.ShowMateriaTiers = configValue2;
-                    // can save immediately on change, if you don't want to provide a "Save and Close" button
                     this.configuration.Save();
+                }
+
+                var configValue3 = this.configuration.ShowDamagePotency;
+                if (ImGui.Checkbox("Show Damage Potency", ref configValue3))
+                {
+                    this.configuration.ShowDamagePotency = configValue3;
+                    this.configuration.Save();
+                }
+
+                var configValue4 = this.configuration.LayoutType;
+                string[] layouts = { "Horizontal", "Grid", "Vertical" };
+                ImGui.SetNextItemWidth(100);
+                if (ImGui.BeginCombo("Layout", layouts[configValue4]))
+                {
+                    for (var i = 0; i < layouts.Length; i++)
+                    {
+                        bool is_selected = configValue4 == i;
+                        if (ImGui.Selectable(layouts[i], is_selected))
+                        {
+                            configValue4 = i;
+                            this.configuration.LayoutType = configValue4;
+                            this.configuration.Save();
+                        }
+                        // initial selection
+                        if (is_selected) ImGui.SetItemDefaultFocus();
+                    }
+                    ImGui.EndCombo();
                 }
 
             }
