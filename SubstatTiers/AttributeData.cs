@@ -114,6 +114,8 @@ namespace SubstatTiers
 
             JobId = (JobThreeLetter)aState.CurrentClassJobId;
 
+            // TODO: weapon damage is not synced correctly (how to fix?)
+
             var r = InventoryManager.Instance()->GetInventoryContainer(InventoryType.EquippedItems)->Items[0];
             var w = r.ItemID;
 
