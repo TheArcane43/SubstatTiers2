@@ -208,6 +208,7 @@ namespace SubstatTiers
                 (JobThreeLetter.WHM, >= 30) => 20,
                 (JobThreeLetter.BLM, >= 52) => 15,
                 (JobThreeLetter.NIN, >= 45) => 15,
+                (JobThreeLetter.AST, >= 50) => 10,
                 (JobThreeLetter.SAM, < 18) => 0,
                 (JobThreeLetter.SAM, < 78) => 10,
                 (JobThreeLetter.SAM, >= 78) => 13,
@@ -223,6 +224,7 @@ namespace SubstatTiers
                 JobThreeLetter.WHM => "Presence of Mind",
                 JobThreeLetter.BLM => "Ley Lines",
                 JobThreeLetter.NIN => "Huton",
+                JobThreeLetter.AST => "Astrodyne",
                 JobThreeLetter.SAM => "Shifu",
                 _ => "",
             };

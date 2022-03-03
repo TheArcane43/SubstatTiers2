@@ -124,7 +124,7 @@ namespace SubstatTiers
             };
             if (isTank)
             {
-                c *= 1; // Tank correction not confirmed yet, believed to be 0.7x
+                c = (int)(c * 1.0); // Tank correction not confirmed yet, believed to be 0.7x
             }
             return c;
         }
