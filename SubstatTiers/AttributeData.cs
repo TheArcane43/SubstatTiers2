@@ -16,6 +16,7 @@ namespace SubstatTiers
 
         // Main stats
         internal int Level { get; set; }
+        internal bool IsSynced { get; set; }
         internal JobThreeLetter JobId { get; set; }
         internal int Strength { get; set; }
         internal int Dexterity { get; set; }
@@ -71,11 +72,14 @@ namespace SubstatTiers
             if (Synced > 0)
             {
                 Level = aState.SyncedLevel;
+                IsSynced = true;
             }
             else
             {
                 Level = aState.CurrentLevel;
+                IsSynced = false;
             }
+
             Strength = aState.Attributes[1];
             Dexterity = aState.Attributes[2];
             Vitality = aState.Attributes[3];
@@ -94,7 +98,7 @@ namespace SubstatTiers
             AttackPower = aState.Attributes[20];
             Defense = aState.Attributes[21];
             DirectHit = aState.Attributes[22];
-            // this.BaseAttackSpeed = aState.Attributes[23];
+            // this.BaseSpeed = aState.Attributes[23]; // Base skill/spell speed, equal to [sub] at [level]
             MagicDefense = aState.Attributes[24];
 
             CriticalHit = aState.Attributes[27];
@@ -114,7 +118,7 @@ namespace SubstatTiers
 
             JobId = (JobThreeLetter)aState.CurrentClassJobId;
 
-            // TODO: weapon damage is not synced correctly (how to fix?)
+            // TODO: figure out how to get synced weapon damage (currently using workaround)
 
             var r = InventoryManager.Instance()->GetInventoryContainer(InventoryType.EquippedItems)->Items[0];
             var w = r.ItemID;
@@ -130,7 +134,7 @@ namespace SubstatTiers
             }
 
             // PluginLog.Information($"Rounding check: {PhysicalWeaponDamage}");
-
+            
         }
 
         // Get a class/job's three letter identifier from its id (which is unique)

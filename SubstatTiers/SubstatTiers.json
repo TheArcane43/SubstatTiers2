@@ -2,9 +2,9 @@
   "Author": "TheArcane43",
   "Name": "Substat Tiers",
   "InternalName": "SubstatTiers",
-  "AssemblyVersion": "0.3.0.1",
+  "AssemblyVersion": "0.3.0.2",
   "RepoUrl": "https://github.com/TheArcane43/SubstatTiers2",
-  "Description": "Gives a detailed table of how your substats work. Includes substat tiering, substat effects, and potential tier gains on materia.",
+  "Description": "Gives a detailed table of how your substats work. Includes substat tiering, substat effects, potential tier gains on materia, and estimated damage amounts per 100 potency.",
   "ApplicableVersion": "any",
   "Tags": [
     "substat",
@@ -14,5 +14,5 @@
   "DalamudApiLevel": 5,
   "LoadPriority": 0,
   "Punchline": "Shows how substats tier and what effects you get from them.",
-  "Changelog": "Added Astrologian's Astrodyne."
+  "Changelog": "Disabled Damage Per 100 Potency for synced content, as the numbers shown were incorrect."
 }

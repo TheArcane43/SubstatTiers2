@@ -13,7 +13,7 @@ namespace SubstatTiers
         internal static int[,] StatTable =
         {
             // main, sub, div (lv is implied by location)
-            {20,55,55}, // lv "0"
+            {20,55,55}, // lv "0", completely made up numbers
             {20,56,56},
             {21,57,57},
             {22,60,60},
