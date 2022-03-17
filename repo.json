@@ -15,7 +15,7 @@
     "DalamudApiLevel": 5,
     "LoadPriority": 0,
     "Punchline": "Shows how substats tier and what effects you get from them.",
-    "Changelog": "Disabled Damage Per 100 Potency for synced content, as the numbers shown were incorrect."
+    "Changelog": "Disabled Damage Per 100 Potency for synced content, as the numbers shown were incorrect.",
     "LastUpdated": 0,
     "IsHide": "False",
     "DownloadCount": 0,
