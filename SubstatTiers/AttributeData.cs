@@ -17,6 +17,7 @@ namespace SubstatTiers
         // Main stats
         internal int Level { get; set; }
         internal bool IsSynced { get; set; }
+        internal bool HasAccurateWeaponDamage { get; set; }
         internal JobThreeLetter JobId { get; set; }
         internal int Strength { get; set; }
         internal int Dexterity { get; set; }
@@ -132,6 +133,13 @@ namespace SubstatTiers
                 PhysicalWeaponDamage = (int)Math.Round(PhysicalWeaponDamage * 1.1117);
                 MagicalWeaponDamage = (int)Math.Round(MagicalWeaponDamage * 1.1117);
             }
+
+            // check to see if weapon is ok to use for damage potency numbers
+            // if the current level is the same as the equip level for the weapon
+            // it is most likely ok to use for damage potency numbers
+            // As far as I can tell, there is no way to get the exact "Physical/Magical Damage"
+            // number while synced.
+            HasAccurateWeaponDamage = aState.SyncedLevel >= (p?.LevelEquip ?? 0);
 
             // PluginLog.Information($"Rounding check: {PhysicalWeaponDamage}");
             

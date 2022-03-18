@@ -376,7 +376,7 @@ namespace SubstatTiers
                     {
                         ImGui.Text("Blue Mage's damage potency numbers are not supported."); // Sorry!
                     }
-                    else if (calc.Data.IsSynced) // Cannot determine synced weapon damage
+                    else if (!calc.Data.HasAccurateWeaponDamage) // Cannot determine synced weapon damage
                     {
                         ImGui.Text("Damage potency numbers cannot be calculated for synced content."); 
                     }
