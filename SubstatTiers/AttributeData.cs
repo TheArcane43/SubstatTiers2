@@ -139,7 +139,7 @@ namespace SubstatTiers
             // it is most likely ok to use for damage potency numbers
             // As far as I can tell, there is no way to get the exact "Physical/Magical Damage"
             // number while synced.
-            HasAccurateWeaponDamage = aState.SyncedLevel >= (p?.LevelEquip ?? 9999);
+            HasAccurateWeaponDamage = !IsSynced || aState.SyncedLevel >= (p?.LevelEquip ?? 9999);
 
             // PluginLog.Information($"Rounding check: {PhysicalWeaponDamage}");
             

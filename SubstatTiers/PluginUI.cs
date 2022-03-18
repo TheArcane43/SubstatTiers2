@@ -189,8 +189,8 @@ namespace SubstatTiers
                 {
                     effects.Add(new VisibleEffect($"GCD ({a.HasteName()})", $"{calc.GetGCDmodified():F2}", "Recast time when under the given effect"));
                 }
-                effects.Add(new VisibleEffect("Defense", $"{unitsDefense}%%", "Physical Damage Mitigation due to Defense stat"));
-                effects.Add(new VisibleEffect("Magic Defense", $"{unitsMagicDefense}%%", "Magical Damage Mitigation due to Magic Defense stat"));
+                effects.Add(new VisibleEffect("Defense", $"{unitsDefense}%", "Physical Damage Mitigation due to Defense stat"));
+                effects.Add(new VisibleEffect("Magic Defense", $"{unitsMagicDefense}%", "Magical Damage Mitigation due to Magic Defense stat"));
 
                 // List of materia tiers
                 List<VisibleMateria> materiaTiers = new();
@@ -226,6 +226,9 @@ namespace SubstatTiers
                 damageNums.Add(new VisibleDamage("Damage on Direct Hits", calc.DamageFormula(false, true)));
                 damageNums.Add(new VisibleDamage("Damage on Critical Direct Hits", calc.DamageFormula(true, true)));
                 damageNums.Add(new VisibleDamage("Average Damage per 100 potency", calc.DamageAverage()));
+                // Damage over time row
+                damageNums.Add(new VisibleDamage("Damage Over Time Average", calc.DamageOverTimeAverage()));
+
 
                 ImGui.Spacing();
 
@@ -381,7 +384,7 @@ namespace SubstatTiers
                     {
                         ImGui.Text("Blue Mage's damage potency numbers are not supported."); // Sorry!
                     }
-                    else if (!calc.Data.HasAccurateWeaponDamage) // Cannot determine synced weapon damage
+                    else if (calc.Data.IsSynced && !calc.Data.HasAccurateWeaponDamage) // Cannot determine synced weapon damage
                     {
                         ImGui.Text("Damage potency numbers cannot be calculated for synced content."); 
                     }
@@ -404,6 +407,7 @@ namespace SubstatTiers
                         }
                         ImGui.EndTable();
                     }
+
                 }
                 
             }
