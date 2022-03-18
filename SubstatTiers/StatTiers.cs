@@ -185,18 +185,14 @@ namespace SubstatTiers
         {
             int level = calc.Data.Level;
             int[] tiers = MateriaTiersAt(level);
-            Calculations calcOne = (Calculations)calc.Clone(tiers[0]);
-            Calculations calcTwo = (Calculations)calc.Clone(tiers[1]);
-            Calculations calcThree = (Calculations)calc.Clone(tiers[2]);
-            Calculations calcFour = (Calculations)calc.Clone(tiers[3]);
+
             int[] bonusTiers = new int[]
             {
-                calcOne.GetUnits(type) - calc.GetUnits(type),
-                calcTwo.GetUnits(type) - calc.GetUnits(type),
-                calcThree.GetUnits(type) - calc.GetUnits(type),
-                calcFour.GetUnits(type) - calc.GetUnits(type)
+                calc.GetUnits(type, tiers[0]) - calc.GetUnits(type),
+                calc.GetUnits(type, tiers[1]) - calc.GetUnits(type),
+                calc.GetUnits(type, tiers[2]) - calc.GetUnits(type),
+                calc.GetUnits(type, tiers[3]) - calc.GetUnits(type)
             };
-            
 
             string[] result = new string[4];
             for (int i = 0; i < bonusTiers.Length; i++)

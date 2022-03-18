@@ -139,7 +139,7 @@ namespace SubstatTiers
             // it is most likely ok to use for damage potency numbers
             // As far as I can tell, there is no way to get the exact "Physical/Magical Damage"
             // number while synced.
-            HasAccurateWeaponDamage = aState.SyncedLevel >= (p?.LevelEquip ?? 0);
+            HasAccurateWeaponDamage = aState.SyncedLevel >= (p?.LevelEquip ?? 9999);
 
             // PluginLog.Information($"Rounding check: {PhysicalWeaponDamage}");
             
@@ -147,7 +147,7 @@ namespace SubstatTiers
 
         // Get a class/job's three letter identifier from its id (which is unique)
         internal string GetJobTL() => JobId.ToString();
-        // Is this a disciple of the hand or land? substat tiers do not apply here
+        // Is this a disciple of the hand or land?
         internal bool IsHandLand()
         {
             return JobId switch
@@ -166,6 +166,7 @@ namespace SubstatTiers
                 _ => false,
             };
         }
+        // Does this use Attack Power / Physical Damage?
         internal bool UsesAttackPower()
         {
             return JobId switch
@@ -193,6 +194,7 @@ namespace SubstatTiers
         }
         internal int WeaponPower => UsesAttackPower() ? PhysicalWeaponDamage : MagicalWeaponDamage;
         internal StatConstants.SubstatType SpeedType => UsesAttackPower() ? StatConstants.SubstatType.SkSpd : StatConstants.SubstatType.SpSpd;
+        // Does this have Maim and Mend?
         internal bool UsesCasterTraits()
         {
             return JobId switch

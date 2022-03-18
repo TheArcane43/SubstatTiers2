@@ -6,14 +6,14 @@ using Dalamud.Logging;
 
 namespace SubstatTiers
 {
-    public class Calculations : ICloneable
+    public class Calculations
     {
 
         internal AttributeData Data { get; set; }
 
         internal int Speed { get; set; } = 400;
 
-        internal int GetUnits(StatConstants.SubstatType substat)
+        internal int GetUnits(StatConstants.SubstatType substat, int extraAmount = 0)
         {
             if (substat == StatConstants.SubstatType.GCDbase)
             {
@@ -23,6 +23,7 @@ namespace SubstatTiers
             {
                 return GetSpeedUnitsOfGCDmodified();
             }
+            int div = StatConstants.GetDivAtLevel(Data.Level);
             int stat = substat switch
             {
                 StatConstants.SubstatType.Crit => Data.CriticalHit,
@@ -32,38 +33,24 @@ namespace SubstatTiers
                 StatConstants.SubstatType.SpSpd => Data.SpellSpeed,
                 StatConstants.SubstatType.Ten => Data.Tenacity,
                 StatConstants.SubstatType.Piety => Data.Piety,
+                StatConstants.SubstatType.Defense => Data.Defense,
+                StatConstants.SubstatType.MagicDefense => Data.MagicDefense,
                 _ => 1,
             };
-            int coeff = substat switch
-            {
-                StatConstants.SubstatType.Crit => StatConstants.CritCoeff,
-                StatConstants.SubstatType.Det => StatConstants.DeterminationCoeff,
-                StatConstants.SubstatType.Direct => StatConstants.DirectCoeff,
-                StatConstants.SubstatType.SkSpd => StatConstants.SkillCoeff,
-                StatConstants.SubstatType.SpSpd => StatConstants.SpellCoeff,
-                StatConstants.SubstatType.Ten => StatConstants.TenacityCoeff,
-                StatConstants.SubstatType.Piety => StatConstants.PietyCoeff,
-                _ => 1,
-            };
+            int baseStat = StatConstants.GetBaseStatAtLevel(Data.Level, substat);
+            int coeff = StatConstants.GetCoefficient(substat);
 
-            return Formulas.StatFormula(StatConstants.GetDivAtLevel(Data.Level), stat, StatConstants.GetBaseStatAtLevel(Data.Level, substat), coeff);
+            return Formulas.StatFormula(div, stat + extraAmount, baseStat, coeff);
         }
 
+        // Given units, return the amount of stat needed
         internal int GetStatsFromUnits(StatConstants.SubstatType substat, int units)
         {
-            int coeff = substat switch
-            {
-                StatConstants.SubstatType.Crit => StatConstants.CritCoeff,
-                StatConstants.SubstatType.Det => StatConstants.DeterminationCoeff,
-                StatConstants.SubstatType.Direct => StatConstants.DirectCoeff,
-                StatConstants.SubstatType.SkSpd => StatConstants.SkillCoeff,
-                StatConstants.SubstatType.SpSpd => StatConstants.SpellCoeff,
-                StatConstants.SubstatType.Ten => StatConstants.TenacityCoeff,
-                StatConstants.SubstatType.Piety => StatConstants.PietyCoeff,
-                _ => 1,
-            };
+            int div = StatConstants.GetDivAtLevel(Data.Level);
+            int baseStat = StatConstants.GetBaseStatAtLevel(Data.Level, substat);
+            int coeff = StatConstants.GetCoefficient(substat);
 
-            return Formulas.ReverseStatFormula(StatConstants.GetDivAtLevel(Data.Level), units, StatConstants.GetBaseStatAtLevel(Data.Level, substat), coeff);
+            return Formulas.ReverseStatFormula(div, units, baseStat, coeff);
         }
 
         internal Calculations(AttributeData a)
@@ -72,28 +59,6 @@ namespace SubstatTiers
             Speed = Data.UsesAttackPower() ? Data.SkillSpeed : Data.SpellSpeed;
         }
 
-        public object Clone()
-        {
-            return Clone(0);
-        }
-
-        public object Clone(int modifier)
-        {
-
-            AttributeData a = new()
-            {
-                Level = Data.Level,
-                CriticalHit = Data.CriticalHit + modifier,
-                Determination = Data.Determination + modifier,
-                DirectHit = Data.DirectHit + modifier,
-                SkillSpeed = Data.SkillSpeed + modifier,
-                SpellSpeed = Data.SpellSpeed + modifier,
-                Tenacity = Data.Tenacity + modifier,
-                Piety = Data.Piety + modifier
-            };
-
-            return new Calculations(a);
-        }
 
         internal double GetGCDbase() => Formulas.GCDFormula(GetUnits(Data.SpeedType), 0);
         internal double GetGCDmodified() => Formulas.GCDFormula(GetUnits(Data.SpeedType), Data.HasteAmount());
@@ -102,7 +67,7 @@ namespace SubstatTiers
         internal int GetSpeedUnitsOfNextGCDbase() => Formulas.ReverseGCDFormula(GetGCDbase() - 0.010000001, 0);
         internal int GetSpeedUnitsOfNextGCDmodified() => Formulas.ReverseGCDFormula(GetGCDmodified() - 0.010000001, Data.HasteAmount());
         // NOTE: due to rounding and/or float precision, the 0.010000001 is necessary to actually move to the next GCD
-        //   don't know which one it is, but it doesn't seem to break anything else
+        //   don't know which one it is, but it seems to work with every test
 
         internal int FunctionWD()
         {
@@ -145,9 +110,8 @@ namespace SubstatTiers
             int det = Data.Determination;
             int main = StatTiers.GetStat(Data.Level, StatTiers.DataType.Main);
             int div = StatTiers.GetStat(Data.Level, StatTiers.DataType.Div);
-            int coeff = StatConstants.DeterminationCoeff;
-
-            return (int)(Math.Floor(coeff * (det - main) / (double)div) + 1000);
+            int coeff = StatConstants.GetCoefficient(StatConstants.SubstatType.Det);
+            return Formulas.StatFormula(div, det, main, coeff) + 1000;
         }
 
         // Returns 1000 + tiers of tenacity
@@ -156,9 +120,9 @@ namespace SubstatTiers
             int ten = Data.Tenacity;
             int sub = StatTiers.GetStat(Data.Level, StatTiers.DataType.Sub);
             int div = StatTiers.GetStat(Data.Level, StatTiers.DataType.Div);
-            int coeff = StatConstants.TenacityCoeff;
+            int coeff = StatConstants.GetCoefficient(StatConstants.SubstatType.Ten);
 
-            return (int)(Math.Floor(coeff * (ten - sub) / (double)div) + 1000);
+            return Formulas.StatFormula(div, ten, sub, coeff) + 1000;
         }
 
         // Returns 1000 + tiers of speed
@@ -167,9 +131,9 @@ namespace SubstatTiers
             int spd = Data.UsesAttackPower() ? Data.SkillSpeed : Data.SpellSpeed;
             int sub = StatTiers.GetStat(Data.Level, StatTiers.DataType.Sub);
             int div = StatTiers.GetStat(Data.Level, StatTiers.DataType.Div);
-            int coeff = Data.UsesAttackPower() ? StatConstants.SkillCoeff : StatConstants.SpellCoeff;
+            int coeff = StatConstants.GetCoefficient(Data.UsesAttackPower() ? StatConstants.SubstatType.SkSpd : StatConstants.SubstatType.SpSpd);
 
-            return (int)(Math.Floor(coeff * (spd - sub) / (double)div) + 1000);
+            return Formulas.StatFormula(div, spd, sub, coeff) + 1000;
         }
 
         // Returns 1400 + tiers of critical hit (base crit damage is 40.0%)
@@ -178,9 +142,9 @@ namespace SubstatTiers
             int crit = Data.CriticalHit;
             int sub = StatTiers.GetStat(Data.Level, StatTiers.DataType.Sub);
             int div = StatTiers.GetStat(Data.Level, StatTiers.DataType.Div);
-            int coeff = StatConstants.CritCoeff;
+            int coeff = StatConstants.GetCoefficient(StatConstants.SubstatType.Crit);
 
-            return (int)(Math.Floor(coeff * (crit - sub) / (double)div) + 1400);
+            return Formulas.StatFormula(div, crit, sub, coeff) + 1400;
         }
 
         internal int DamageFormula(bool isCrit, bool isDirect)
@@ -218,10 +182,6 @@ namespace SubstatTiers
             double trueDirRate = dirRate - dcRate;
             double noneRate = 1 - trueCritRate - trueDirRate - dcRate;
 
-            // Testing!
-            // PluginLog.Information($"{noneRate:F3}\t{critRate:F3}\t{dirRate:F3}\t{dcRate:F3}");
-            // PluginLog.Information($"{baseDamage}\t{critDamage}\t{dirDamage}\t{dcDamage}");
-
             return (int)(noneRate * baseDamage + trueCritRate * critDamage + trueDirRate * dirDamage + dcRate * dcDamage);
         }
 
@@ -232,7 +192,7 @@ namespace SubstatTiers
             int det = FunctionDET();
             int tnc = Data.IsTank() ? FunctionTEN() : 1000;
             int wep = FunctionWD();
-            int tr = (int)Data.TraitAmount() * 100;
+            int tr = 100 + (int)(Data.TraitAmount() * 100);
             int crit = isCrit ? FunctionCRIT() : 1000;
             int dh = isDirect ? 125 : 100;
             int spd = FunctionSPD();
@@ -244,6 +204,22 @@ namespace SubstatTiers
             return randCalc;
         }
 
+        internal int DamageOverTimeAverage()
+        {
+            int baseDamage = DamageOverTimeFormula(false, false);
+            int critDamage = DamageOverTimeFormula(true, false);
+            int dirDamage = DamageOverTimeFormula(false, true);
+            int dcDamage = DamageOverTimeFormula(true, true);
+
+            double critRate = GetUnits(StatConstants.SubstatType.Crit) / 1000.0 + 0.05;
+            double dirRate = GetUnits(StatConstants.SubstatType.Direct) / 1000.0;
+            double dcRate = critRate * dirRate;
+            double trueCritRate = critRate - dcRate;
+            double trueDirRate = dirRate - dcRate;
+            double noneRate = 1 - trueCritRate - trueDirRate - dcRate;
+
+            return (int)(noneRate * baseDamage + trueCritRate * critDamage + trueDirRate * dirDamage + dcRate * dcDamage);
+        }
     }
 
     internal static class Extensions
@@ -277,19 +253,10 @@ namespace SubstatTiers
             Ten,
             Piety,
             GCDbase,
-            GCDmodified
+            GCDmodified,
+            Defense,
+            MagicDefense
         }
-
-
-        internal const int MaxLevel = 90;
-
-        internal const int CritCoeff = 200;
-        internal const int DeterminationCoeff = 140;
-        internal const int DirectCoeff = 550;
-        internal const int SkillCoeff = 130;
-        internal const int SpellCoeff = 130;
-        internal const int TenacityCoeff = 100;
-        internal const int PietyCoeff = 150;
 
         private static int GetMainAtLevel(int level)
         {
@@ -312,7 +279,24 @@ namespace SubstatTiers
         internal static int GetBaseStatAtLevel(int level, SubstatType substat)
         {
             if (substat == SubstatType.Det || substat == SubstatType.Piety) return GetMainAtLevel(level);
+            else if (substat == SubstatType.Defense || substat == SubstatType.MagicDefense) return 0;
             else return GetSubAtLevel(level);
+        }
+        internal static int GetCoefficient(SubstatType substat)
+        {
+            return substat switch
+            {
+                SubstatType.Crit => 200,
+                SubstatType.Det => 140,
+                SubstatType.Direct => 550,
+                SubstatType.SkSpd => 150,
+                SubstatType.SpSpd => 150,
+                SubstatType.Ten => 100,
+                SubstatType.Piety => 150,
+                SubstatType.Defense => 15,
+                SubstatType.MagicDefense => 15,
+                _ => 1,
+            };
         }
 
     }

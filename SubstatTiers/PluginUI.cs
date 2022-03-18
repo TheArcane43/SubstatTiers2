@@ -129,6 +129,9 @@ namespace SubstatTiers
                 int nextGCDBase = calc.GetStatsFromUnits(calc.Data.SpeedType, calc.GetSpeedUnitsOfNextGCDbase());
                 int nextGCDModified = calc.GetStatsFromUnits(calc.Data.SpeedType, calc.GetSpeedUnitsOfNextGCDmodified());
 
+                // Defense units for effects only
+                int unitsDefense = calc.GetUnits(StatConstants.SubstatType.Defense);
+                int unitsMagicDefense = calc.GetUnits(StatConstants.SubstatType.MagicDefense);
 
                 // List of stats/tiers
                 List<VisibleInfo> statList = new();
@@ -186,6 +189,8 @@ namespace SubstatTiers
                 {
                     effects.Add(new VisibleEffect($"GCD ({a.HasteName()})", $"{calc.GetGCDmodified():F2}", "Recast time when under the given effect"));
                 }
+                effects.Add(new VisibleEffect("Defense", $"{unitsDefense}%%", "Physical Damage Mitigation due to Defense stat"));
+                effects.Add(new VisibleEffect("Magic Defense", $"{unitsMagicDefense}%%", "Magical Damage Mitigation due to Magic Defense stat"));
 
                 // List of materia tiers
                 List<VisibleMateria> materiaTiers = new();
