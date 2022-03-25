@@ -120,6 +120,86 @@ namespace SubstatTiers
         }
     }
 
+    internal class WeaponDamage
+    {
+        internal static int[] WDBelow50 =
+        {
+            8, // ilv 0
+            9,
+            9,
+            10,
+            11,
+            12,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            20,
+            21,
+            22,
+            23,
+            24,
+            26,
+            27,
+            28,
+            29,
+            30,
+            30,
+            31,
+            32,
+            33,
+            34,
+            34,
+            35,
+            36,
+            37,
+            37,
+            38,
+            39,
+            40,
+            40,
+            41,
+            42,
+            42,
+            43,
+            44,
+            46,
+            47,
+            49,
+            50,
+            51,
+            53,
+            54,
+            56,
+            57 // ilv 50
+        };
+
+        internal static int GetWeaponDamageFromIlv(int ilv) => ilv <= 50 ? WDBelow50[ilv] : (int)Math.Round(0.101 * ilv + 52);
+
+        internal static int GetWeaponDamageFromLevel(int level)
+        {
+            if (level < 50)
+            {
+                return WDBelow50[level];
+            }
+            int ilv = level switch {
+                <60 => 130,
+                <70 => 270,
+                <80 => 400,
+                <90 => 530,
+                _ => 600
+            };
+            if (level % 10 > 3)
+            {
+                ilv += (level - 3) * 3;
+            }
+            return GetWeaponDamageFromIlv(ilv);
+        }
+    }
+
     internal class VisibleInfo
     {
         internal string Name { get; set; }

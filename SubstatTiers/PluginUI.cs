@@ -16,6 +16,9 @@ namespace SubstatTiers
 
         private ImGuiScene.TextureWrap goatImage;
 
+        // Have an instance of the AttributeData ready at all times
+        private AttributeData? attributeData = null;
+
         // this extra bool exists for ImGui, since you can't ref a property
         private bool visible = false;
         public bool Visible
@@ -54,6 +57,7 @@ namespace SubstatTiers
 
             DrawMainWindow();
             DrawSettingsWindow();
+
         }
 
         public unsafe void DrawMainWindow()
@@ -79,21 +83,28 @@ namespace SubstatTiers
                 //ImGui.Indent(55);
                 //ImGui.Image(this.goatImage.ImGuiHandle, new Vector2(this.goatImage.Width, this.goatImage.Height));
                 //ImGui.Unindent(55);
-
-                AttributeData a = new();
-                if (a.CriticalHit < 20 || a.SkillSpeed < 20 || !a.IsLoaded)
+                
+                this.attributeData = new();
+                
+                if (attributeData is null || !attributeData.IsLoaded)
+                {
+                    ImGui.Text("Unable to obtain character info.");
+                    ImGui.End();
+                    return;
+                }
+                if (attributeData.CriticalHit < 20 || attributeData.SkillSpeed < 20)
                 {
                     ImGui.Text("Substat Tiers does not work in this area.");
                     ImGui.End();
                     return;
                 }
-                if (a.IsHandLand())
+                if (attributeData.IsHandLand())
                 {
                     ImGui.Text("Substats do not apply for your current class/job.");
                     ImGui.End();
                     return;
                 }
-                Calculations calc = new(a);
+                Calculations calc = new(attributeData);
 
 
                 // Main table -------------------------------------------------
@@ -138,7 +149,7 @@ namespace SubstatTiers
                 statList.Add(new VisibleInfo(StatConstants.SubstatType.Crit.VisibleName(), calc.Data.CriticalHit, calc.Data.CriticalHit - prevCritHit, nextCritHit - calc.Data.CriticalHit));
                 statList.Add(new VisibleInfo(StatConstants.SubstatType.Det.VisibleName(), calc.Data.Determination, calc.Data.Determination - prevDetermination, nextDetermination - calc.Data.Determination));
                 statList.Add(new VisibleInfo(StatConstants.SubstatType.Direct.VisibleName(), calc.Data.DirectHit, calc.Data.DirectHit - prevDirectHit, nextDirectHit - calc.Data.DirectHit));
-                if (a.UsesAttackPower())
+                if (attributeData.UsesAttackPower())
                 {
                     statList.Add(new VisibleInfo(StatConstants.SubstatType.SkSpd.VisibleName(), calc.Data.SkillSpeed, calc.Data.SkillSpeed - prevSkillSpeed, nextSkillSpeed - calc.Data.SkillSpeed));
                 }
@@ -146,18 +157,18 @@ namespace SubstatTiers
                 {
                     statList.Add(new VisibleInfo(StatConstants.SubstatType.SpSpd.VisibleName(), calc.Data.SpellSpeed, calc.Data.SpellSpeed - prevSpellSpeed, nextSpellSpeed - calc.Data.SpellSpeed));
                 }
-                if (a.IsTank())
+                if (attributeData.IsTank())
                 {
                     statList.Add(new VisibleInfo(StatConstants.SubstatType.Ten.VisibleName(), calc.Data.Tenacity, calc.Data.Tenacity - prevTenacity, nextTenacity - calc.Data.Tenacity));
                 }
-                if (a.IsHealer())
+                if (attributeData.IsHealer())
                 {
                     statList.Add(new VisibleInfo(StatConstants.SubstatType.Piety.VisibleName(), calc.Data.Piety, calc.Data.Piety - prevPiety, nextPiety - calc.Data.Piety));
                 }
 
                 statList.Add(new VisibleInfo("GCD(Base)", calc.GetGCDbase(), calc.Speed - prevGCDBase, nextGCDBase - calc.Speed));
 
-                if (a.HasteAmount() > 0)
+                if (attributeData.HasteAmount() > 0)
                 {
                     statList.Add(new VisibleInfo("GCD +", calc.GetGCDmodified(), calc.Speed - prevGCDModified, nextGCDModified - calc.Speed));
                 }
@@ -168,7 +179,7 @@ namespace SubstatTiers
                 effects.Add(new VisibleEffect("Critical Damage", $"+{unitsCritHit * 0.001 + 0.40:P1}", "Damage bonus when you hit a critical hit"));
                 effects.Add(new VisibleEffect("Determination", $"+{unitsDetermination * 0.001:P1}", "Overall increase in outgoing damage and healing"));
                 effects.Add(new VisibleEffect("Direct Hit Rate", $"{unitsDirectHit * 0.001:P1}", "The frequency of direct hits"));
-                if (a.UsesAttackPower())
+                if (attributeData.UsesAttackPower())
                 {
                     effects.Add(new VisibleEffect("DoT Bonus", $"+{unitsSkillSpeed * 0.001:P1}", "Damage bonus on damage over time effects"));
                 }
@@ -176,18 +187,18 @@ namespace SubstatTiers
                 {
                     effects.Add(new VisibleEffect("DoT Bonus", $"+{unitsSpellSpeed * 0.001:P1}", "Damage bonus on damage over time effects"));
                 }
-                if (a.IsTank())
+                if (attributeData.IsTank())
                 {
                     effects.Add(new VisibleEffect("Tenacity Bonus", $"+{unitsTenacity * 0.001:P1}", "Extra damage, mitigation, and outgoing healing as a tank"));
                 }
-                if (a.IsHealer())
+                if (attributeData.IsHealer())
                 {
                     effects.Add(new VisibleEffect("MP Regen per tick", $"{unitsPiety + 200} MP", "MP recovery every 3 seconds"));
                 }
                 effects.Add(new VisibleEffect("GCD (Base)", $"{calc.GetGCDbase():F2}", "Recast time for most actions with a base of 2.50 seconds"));
-                if (a.HasteAmount() > 0)
+                if (attributeData.HasteAmount() > 0)
                 {
-                    effects.Add(new VisibleEffect($"GCD ({a.HasteName()})", $"{calc.GetGCDmodified():F2}", "Recast time when under the given effect"));
+                    effects.Add(new VisibleEffect($"GCD ({attributeData.HasteName()})", $"{calc.GetGCDmodified():F2}", "Recast time when under the given effect"));
                 }
                 effects.Add(new VisibleEffect("Defense", $"{unitsDefense}%", "Physical Damage Mitigation due to Defense stat"));
                 effects.Add(new VisibleEffect("Magic Defense", $"{unitsMagicDefense}%", "Magical Damage Mitigation due to Magic Defense stat"));
@@ -197,7 +208,7 @@ namespace SubstatTiers
                 materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Crit));
                 materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Det));
                 materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Direct));
-                if (a.UsesAttackPower())
+                if (attributeData.UsesAttackPower())
                 {
                     materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.SkSpd));
                 }
@@ -205,16 +216,16 @@ namespace SubstatTiers
                 {
                     materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.SpSpd));
                 }
-                if (a.IsTank())
+                if (attributeData.IsTank())
                 {
                     materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Ten));
                 }
-                if (a.IsHealer())
+                if (attributeData.IsHealer())
                 {
                     materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Piety));
                 }
                 materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.GCDbase));
-                if (a.HasteAmount() > 0)
+                if (attributeData.HasteAmount() > 0)
                 {
                     materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.GCDmodified));
                 }
@@ -222,13 +233,18 @@ namespace SubstatTiers
                 // List of damage potencies
                 List<VisibleDamage> damageNums = new();
                 damageNums.Add(new VisibleDamage("Normal Damage", calc.DamageFormula(false, false)));
-                damageNums.Add(new VisibleDamage("Damage on Critical Hits", calc.DamageFormula(true, false)));
-                damageNums.Add(new VisibleDamage("Damage on Direct Hits", calc.DamageFormula(false, true)));
-                damageNums.Add(new VisibleDamage("Damage on Critical Direct Hits", calc.DamageFormula(true, true)));
+                if (configuration.ShowVerboseDamage)
+                {
+                    damageNums.Add(new VisibleDamage("Damage on Critical Hits", calc.DamageFormula(true, false)));
+                    damageNums.Add(new VisibleDamage("Damage on Direct Hits", calc.DamageFormula(false, true)));
+                    damageNums.Add(new VisibleDamage("Damage on Critical Direct Hits", calc.DamageFormula(true, true)));
+                }
                 damageNums.Add(new VisibleDamage("Average Damage per 100 potency", calc.DamageAverage()));
                 // Damage over time row
-                damageNums.Add(new VisibleDamage("Damage Over Time Average", calc.DamageOverTimeAverage()));
-
+                if (configuration.ShowVerboseDamage)
+                {
+                    damageNums.Add(new VisibleDamage("Damage Over Time Average", calc.DamageOverTimeAverage()));
+                }
 
                 ImGui.Spacing();
 
@@ -238,7 +254,7 @@ namespace SubstatTiers
                 // Stat Table -------------------------------------------------
                 if (ImGui.BeginTable("tableStats", 4, flags))
                 {
-                    ImGui.TableSetupColumn($"{a.GetJobTL()} Lv{calc.Data.Level}", ImGuiTableColumnFlags.WidthFixed);
+                    ImGui.TableSetupColumn($"{attributeData.GetJobTL()} Lv{calc.Data.Level}", ImGuiTableColumnFlags.WidthFixed);
                     ImGui.TableSetupColumn($"Stat", ImGuiTableColumnFlags.WidthFixed, 50);
                     ImGui.TableSetupColumn($"Over", ImGuiTableColumnFlags.WidthFixed, 40);
                     ImGui.TableSetupColumn($"Next", ImGuiTableColumnFlags.WidthFixed, 40);
@@ -295,7 +311,7 @@ namespace SubstatTiers
                     // Materia table setup
                     if (ImGui.BeginTable("tableMateria", 5, flags))
                     {
-                        int[] titles = VisibleMateria.MateriaTiersAt(a.Level);
+                        int[] titles = VisibleMateria.MateriaTiersAt(attributeData.Level);
                         ImGui.TableSetupColumn("Materia:", ImGuiTableColumnFlags.WidthFixed, 100);
                         ImGui.TableSetupColumn($"+ {titles[0]}", ImGuiTableColumnFlags.WidthFixed, 30);
                         ImGui.TableSetupColumn($"+ {titles[1]}", ImGuiTableColumnFlags.WidthFixed, 30);
@@ -422,7 +438,7 @@ namespace SubstatTiers
                 return;
             }
 
-            ImGui.SetNextWindowSize(new Vector2(275, 200), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new Vector2(275, 220), ImGuiCond.Always);
             if (ImGui.Begin("Substat Tiers Settings", ref this.settingsVisible,
                 ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
@@ -455,6 +471,17 @@ namespace SubstatTiers
                     this.configuration.ShowDamagePotency = configValue3;
                     this.configuration.Save();
                 }
+                ImGui.Indent(25);
+                var configValue5 = this.configuration.ShowVerboseDamage;
+                if (configuration.ShowDamagePotency)
+                {
+                    if (ImGui.Checkbox("Verbose Damage output", ref configValue5))
+                    {
+                        this.configuration.ShowVerboseDamage = configValue5;
+                        this.configuration.Save();
+                    }
+                }
+                ImGui.Unindent(25);
 
                 var configValue4 = this.configuration.LayoutType;
                 string[] layouts = { "Horizontal", "Grid", "Vertical" };
