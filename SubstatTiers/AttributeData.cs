@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using Dalamud;
 using Dalamud.Logging;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
+using Lumina.Excel.GeneratedSheets;
 
 namespace SubstatTiers
 {
@@ -14,6 +16,8 @@ namespace SubstatTiers
 
         // Main stats
         internal int Level { get; set; }
+        internal bool IsSynced { get; set; }
+        internal bool HasAccurateWeaponDamage { get; set; }
         internal JobThreeLetter JobId { get; set; }
         internal int Strength { get; set; }
         internal int Dexterity { get; set; }
@@ -41,6 +45,8 @@ namespace SubstatTiers
         internal int Defense { get; set; }
         internal int MagicDefense { get; set; }
         internal int Haste { get; set; }
+        internal int PhysicalWeaponDamage { get; set; }
+        internal int MagicalWeaponDamage { get; set; }
 
         // Non-battle specific
         internal int MaxGP { get; set; }
@@ -67,11 +73,14 @@ namespace SubstatTiers
             if (Synced > 0)
             {
                 Level = aState.SyncedLevel;
+                IsSynced = true;
             }
             else
             {
                 Level = aState.CurrentLevel;
+                IsSynced = false;
             }
+
             Strength = aState.Attributes[1];
             Dexterity = aState.Attributes[2];
             Vitality = aState.Attributes[3];
@@ -90,7 +99,7 @@ namespace SubstatTiers
             AttackPower = aState.Attributes[20];
             Defense = aState.Attributes[21];
             DirectHit = aState.Attributes[22];
-            // this.BaseAttackSpeed = aState.Attributes[23];
+            // this.BaseSpeed = aState.Attributes[23]; // Base skill/spell speed, equal to [sub] at [level]
             MagicDefense = aState.Attributes[24];
 
             CriticalHit = aState.Attributes[27];
@@ -110,11 +119,61 @@ namespace SubstatTiers
 
             JobId = (JobThreeLetter)aState.CurrentClassJobId;
 
+            // TODO: figure out how to get synced weapon damage (currently using workaround)
+
+            var r = InventoryManager.Instance()->GetInventoryContainer(InventoryType.EquippedItems)->Items[0];
+            var w = r.ItemID;
+
+            var p = Service.DataManager.GetExcelSheet<Item>()?.GetRow(w);
+            // Item level of current weapon
+            int ilv = (int)(p?.LevelItem.Row ?? 0);
+
+            // check to see if character is synced
+            if (IsSynced)
+            {
+                int eqpLvWep = p?.LevelEquip ?? 9999;
+                int wd;
+                // check if current weapon is synced
+                if (Level < eqpLvWep)
+                {
+                    // weapon damage is based on synced level (current level)
+                    wd = WeaponDamage.GetWeaponDamageFromLevel(Level);
+                }
+                else
+                {
+                    // weapon damage is based on the actual weapon's ilv
+                    wd = WeaponDamage.GetWeaponDamageFromIlv(ilv);
+                }
+                PhysicalWeaponDamage = wd;
+                MagicalWeaponDamage = wd;
+            }
+            else
+            {
+                // get weapon damage straight from weapon
+                PhysicalWeaponDamage = p?.DamagePhys ?? 0;
+                MagicalWeaponDamage = p?.DamageMag ?? 0;
+
+                if (r.Flags.HasFlag(InventoryItem.ItemFlags.HQ))
+                {
+                    PhysicalWeaponDamage = (int)Math.Round(PhysicalWeaponDamage * 1.1117);
+                    MagicalWeaponDamage = (int)Math.Round(MagicalWeaponDamage * 1.1117);
+                }
+            }
+
+
+            // Assume weapon is ok to use for damage potency numbers
+            // As far as I can tell, there is no way to get the exact "Physical/Magical Damage"
+            // number while synced; however, we can get the damage from item level.
+            HasAccurateWeaponDamage = true;
+            // may not work for content that you sync upward (e.g. resistance instances: sync up to ilv 430 for lv 71-79)
+
+            // PluginLog.Information($"Rounding check: {PhysicalWeaponDamage}");
+            
         }
 
         // Get a class/job's three letter identifier from its id (which is unique)
         internal string GetJobTL() => JobId.ToString();
-        // Is this a disciple of the hand or land? substat tiers do not apply here
+        // Is this a disciple of the hand or land?
         internal bool IsHandLand()
         {
             return JobId switch
@@ -133,6 +192,7 @@ namespace SubstatTiers
                 _ => false,
             };
         }
+        // Does this use Attack Power / Physical Damage?
         internal bool UsesAttackPower()
         {
             return JobId switch
@@ -158,6 +218,9 @@ namespace SubstatTiers
                 _ => false,
             };
         }
+        internal int WeaponPower => UsesAttackPower() ? PhysicalWeaponDamage : MagicalWeaponDamage;
+        internal StatConstants.SubstatType SpeedType => UsesAttackPower() ? StatConstants.SubstatType.SkSpd : StatConstants.SubstatType.SpSpd;
+        // Does this have Maim and Mend?
         internal bool UsesCasterTraits()
         {
             return JobId switch
@@ -187,6 +250,7 @@ namespace SubstatTiers
                 (JobThreeLetter.WHM, >= 30) => 20,
                 (JobThreeLetter.BLM, >= 52) => 15,
                 (JobThreeLetter.NIN, >= 45) => 15,
+                (JobThreeLetter.AST, >= 50) => 10,
                 (JobThreeLetter.SAM, < 18) => 0,
                 (JobThreeLetter.SAM, < 78) => 10,
                 (JobThreeLetter.SAM, >= 78) => 13,
@@ -202,6 +266,7 @@ namespace SubstatTiers
                 JobThreeLetter.WHM => "Presence of Mind",
                 JobThreeLetter.BLM => "Ley Lines",
                 JobThreeLetter.NIN => "Huton",
+                JobThreeLetter.AST => "Astrodyne",
                 JobThreeLetter.SAM => "Shifu",
                 _ => "",
             };
@@ -304,8 +369,6 @@ namespace SubstatTiers
             };
         }
 
-        //  instead, make a list of jobs and have methods for each modifier? lookup table by id
-        //
     }
 
     internal enum JobThreeLetter
