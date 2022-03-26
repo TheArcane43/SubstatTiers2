@@ -17,6 +17,7 @@ namespace SubstatTiers
         // Main stats
         internal int Level { get; set; }
         internal bool IsSynced { get; set; }
+        internal bool HasAccurateWeaponDamage { get; set; }
         internal JobThreeLetter JobId { get; set; }
         internal int Strength { get; set; }
         internal int Dexterity { get; set; }
@@ -124,14 +125,47 @@ namespace SubstatTiers
             var w = r.ItemID;
 
             var p = Service.DataManager.GetExcelSheet<Item>()?.GetRow(w);
-            PhysicalWeaponDamage = p?.DamagePhys ?? 0;
-            MagicalWeaponDamage = p?.DamageMag ?? 0;
+            // Item level of current weapon
+            int ilv = (int)(p?.LevelItem.Row ?? 0);
 
-            if (r.Flags.HasFlag(InventoryItem.ItemFlags.HQ))
+            // check to see if character is synced
+            if (IsSynced)
             {
-                PhysicalWeaponDamage = (int)Math.Round(PhysicalWeaponDamage * 1.1117);
-                MagicalWeaponDamage = (int)Math.Round(MagicalWeaponDamage * 1.1117);
+                int eqpLvWep = p?.LevelEquip ?? 9999;
+                int wd;
+                // check if current weapon is synced
+                if (Level < eqpLvWep)
+                {
+                    // weapon damage is based on synced level (current level)
+                    wd = WeaponDamage.GetWeaponDamageFromLevel(Level);
+                }
+                else
+                {
+                    // weapon damage is based on the actual weapon's ilv
+                    wd = WeaponDamage.GetWeaponDamageFromIlv(ilv);
+                }
+                PhysicalWeaponDamage = wd;
+                MagicalWeaponDamage = wd;
             }
+            else
+            {
+                // get weapon damage straight from weapon
+                PhysicalWeaponDamage = p?.DamagePhys ?? 0;
+                MagicalWeaponDamage = p?.DamageMag ?? 0;
+
+                if (r.Flags.HasFlag(InventoryItem.ItemFlags.HQ))
+                {
+                    PhysicalWeaponDamage = (int)Math.Round(PhysicalWeaponDamage * 1.1117);
+                    MagicalWeaponDamage = (int)Math.Round(MagicalWeaponDamage * 1.1117);
+                }
+            }
+
+
+            // Assume weapon is ok to use for damage potency numbers
+            // As far as I can tell, there is no way to get the exact "Physical/Magical Damage"
+            // number while synced; however, we can get the damage from item level.
+            HasAccurateWeaponDamage = true;
+            // may not work for content that you sync upward (e.g. resistance instances: sync up to ilv 430 for lv 71-79)
 
             // PluginLog.Information($"Rounding check: {PhysicalWeaponDamage}");
             
@@ -139,7 +173,7 @@ namespace SubstatTiers
 
         // Get a class/job's three letter identifier from its id (which is unique)
         internal string GetJobTL() => JobId.ToString();
-        // Is this a disciple of the hand or land? substat tiers do not apply here
+        // Is this a disciple of the hand or land?
         internal bool IsHandLand()
         {
             return JobId switch
@@ -158,6 +192,7 @@ namespace SubstatTiers
                 _ => false,
             };
         }
+        // Does this use Attack Power / Physical Damage?
         internal bool UsesAttackPower()
         {
             return JobId switch
@@ -185,6 +220,7 @@ namespace SubstatTiers
         }
         internal int WeaponPower => UsesAttackPower() ? PhysicalWeaponDamage : MagicalWeaponDamage;
         internal StatConstants.SubstatType SpeedType => UsesAttackPower() ? StatConstants.SubstatType.SkSpd : StatConstants.SubstatType.SpSpd;
+        // Does this have Maim and Mend?
         internal bool UsesCasterTraits()
         {
             return JobId switch
