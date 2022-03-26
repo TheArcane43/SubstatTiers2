@@ -266,27 +266,43 @@ namespace SubstatTiers
             int level = calc.Data.Level;
             int[] tiers = MateriaTiersAt(level);
 
-            int[] bonusTiers = new int[]
+            int[] bonusTiers;
+            if (type == StatConstants.SubstatType.GCDbase)
             {
-                calc.GetUnits(type, tiers[0]) - calc.GetUnits(type),
-                calc.GetUnits(type, tiers[1]) - calc.GetUnits(type),
-                calc.GetUnits(type, tiers[2]) - calc.GetUnits(type),
-                calc.GetUnits(type, tiers[3]) - calc.GetUnits(type)
+                bonusTiers = new int[]
+                {
+                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[0], 0) - Formulas.GCDFormula(calc.Speed, 0))),
+                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[1], 0) - Formulas.GCDFormula(calc.Speed, 0))),
+                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[2], 0) - Formulas.GCDFormula(calc.Speed, 0))),
+                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[3], 0) - Formulas.GCDFormula(calc.Speed, 0)))
+                };
+            }
+            else if(type == StatConstants.SubstatType.GCDmodified)
+            {
+                int hasteAmt = calc.Data.HasteAmount();
+                bonusTiers = new int[]
+                {
+                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[0], hasteAmt) - Formulas.GCDFormula(calc.Speed, hasteAmt))),
+                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[1], hasteAmt) - Formulas.GCDFormula(calc.Speed, hasteAmt))),
+                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[2], hasteAmt) - Formulas.GCDFormula(calc.Speed, hasteAmt))),
+                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[3], hasteAmt) - Formulas.GCDFormula(calc.Speed, hasteAmt)))
+                };
+            }
+            else
+            {
+                bonusTiers = new int[]
+                {
+                    calc.GetUnits(type, tiers[0]) - calc.GetUnits(type),
+                    calc.GetUnits(type, tiers[1]) - calc.GetUnits(type),
+                    calc.GetUnits(type, tiers[2]) - calc.GetUnits(type),
+                    calc.GetUnits(type, tiers[3]) - calc.GetUnits(type)
+                };
             };
 
             string[] result = new string[4];
             for (int i = 0; i < bonusTiers.Length; i++)
             {
-                // Correction for GCD
-                if (type == StatConstants.SubstatType.GCDbase || type == StatConstants.SubstatType.GCDmodified)
-                {
-                    // divide all values by 4 (4 speed tiers = 1 gcd tier)
-                    // technically not accurate for modified gcd (tiers vary between 4 and (5 or 6) based on job)
-                    bonusTiers[i] = bonusTiers[i] / 4;
-                }
-                
                 result[i] = bonusTiers[i].ToString("+0");
-                
             }
 
             return result;
