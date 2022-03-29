@@ -263,40 +263,63 @@ namespace SubstatTiers
 
         internal static string[] GetTiers(Calculations calc, StatConstants.SubstatType type)
         {
+            var _type = type;
             int level = calc.Data.Level;
             int[] tiers = MateriaTiersAt(level);
+
+            int baseUnits = calc.GetUnits(type);
+            // GCD calculations require actual skill/spell speed units
+            if (type == StatConstants.SubstatType.GCDbase || type == StatConstants.SubstatType.GCDmodified)
+            {
+                if (calc.Data.UsesAttackPower())
+                {
+                    baseUnits = calc.GetUnits(StatConstants.SubstatType.SkSpd);
+                    _type = StatConstants.SubstatType.SkSpd;
+                }
+                else
+                {
+                    baseUnits = calc.GetUnits(StatConstants.SubstatType.SpSpd);
+                    _type = StatConstants.SubstatType.SpSpd;
+                }
+
+            }
+
+            
+            int[] units = new int[]
+            {
+                calc.GetUnits(_type, tiers[0]) - baseUnits,
+                calc.GetUnits(_type, tiers[1]) - baseUnits,
+                calc.GetUnits(_type, tiers[2]) - baseUnits,
+                calc.GetUnits(_type, tiers[3]) - baseUnits
+            };
 
             int[] bonusTiers;
             if (type == StatConstants.SubstatType.GCDbase)
             {
                 bonusTiers = new int[]
                 {
-                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[0], 0) - Formulas.GCDFormula(calc.Speed, 0))),
-                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[1], 0) - Formulas.GCDFormula(calc.Speed, 0))),
-                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[2], 0) - Formulas.GCDFormula(calc.Speed, 0))),
-                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[3], 0) - Formulas.GCDFormula(calc.Speed, 0)))
+                    -(int)Math.Round(100*(Formulas.GCDFormula(baseUnits + units[0], 0) - Formulas.GCDFormula(baseUnits, 0))),
+                    -(int)Math.Round(100*(Formulas.GCDFormula(baseUnits + units[1], 0) - Formulas.GCDFormula(baseUnits, 0))),
+                    -(int)Math.Round(100*(Formulas.GCDFormula(baseUnits + units[2], 0) - Formulas.GCDFormula(baseUnits, 0))),
+                    -(int)Math.Round(100*(Formulas.GCDFormula(baseUnits + units[3], 0) - Formulas.GCDFormula(baseUnits, 0)))
                 };
+                
             }
             else if(type == StatConstants.SubstatType.GCDmodified)
             {
                 int hasteAmt = calc.Data.HasteAmount();
                 bonusTiers = new int[]
                 {
-                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[0], hasteAmt) - Formulas.GCDFormula(calc.Speed, hasteAmt))),
-                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[1], hasteAmt) - Formulas.GCDFormula(calc.Speed, hasteAmt))),
-                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[2], hasteAmt) - Formulas.GCDFormula(calc.Speed, hasteAmt))),
-                    -(int)(100*(Formulas.GCDFormula(calc.Speed + tiers[3], hasteAmt) - Formulas.GCDFormula(calc.Speed, hasteAmt)))
+                    -(int)Math.Round(100*(Formulas.GCDFormula(baseUnits + units[0], hasteAmt) - Formulas.GCDFormula(baseUnits, hasteAmt))),
+                    -(int)Math.Round(100*(Formulas.GCDFormula(baseUnits + units[1], hasteAmt) - Formulas.GCDFormula(baseUnits, hasteAmt))),
+                    -(int)Math.Round(100*(Formulas.GCDFormula(baseUnits + units[2], hasteAmt) - Formulas.GCDFormula(baseUnits, hasteAmt))),
+                    -(int)Math.Round(100*(Formulas.GCDFormula(baseUnits + units[3], hasteAmt) - Formulas.GCDFormula(baseUnits, hasteAmt)))
                 };
+
             }
             else
             {
-                bonusTiers = new int[]
-                {
-                    calc.GetUnits(type, tiers[0]) - calc.GetUnits(type),
-                    calc.GetUnits(type, tiers[1]) - calc.GetUnits(type),
-                    calc.GetUnits(type, tiers[2]) - calc.GetUnits(type),
-                    calc.GetUnits(type, tiers[3]) - calc.GetUnits(type)
-                };
+                bonusTiers = units;
             };
 
             string[] result = new string[4];
