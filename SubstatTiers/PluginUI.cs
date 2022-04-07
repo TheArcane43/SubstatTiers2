@@ -446,7 +446,7 @@ namespace SubstatTiers
                 return;
             }
 
-            ImGui.SetNextWindowSize(new Vector2(355, 220), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new Vector2(355, 270), ImGuiCond.Always);
             if (ImGui.Begin("Substat Tiers Settings", ref this.settingsVisible,
                 ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
@@ -497,7 +497,11 @@ namespace SubstatTiers
                 {
                     ImGui.SetTooltip("Must be between 10 and 9999");
                 }
-
+                if (ImGui.Button("Reset potency to 100"))
+                {
+                    this.configuration.Potency = 100;
+                    this.configuration.Save();
+                }
                 var configValue5 = this.configuration.ShowVerboseDamage;
                 if (configuration.ShowDamagePotency)
                 {
