@@ -355,11 +355,13 @@ namespace SubstatTiers
     {
         internal string DamageName { get; set; }
         internal string DamageNumber { get; set; }
+        internal string DamageRange { get; set; }
 
         internal VisibleDamage(string name, int number)
         {
             DamageName = name;
             DamageNumber = number.ToString("N0");
+            DamageRange = $"{(int)(number * 0.95):N0} - {(int)(number * 1.05):N0}";
         }
     }
 

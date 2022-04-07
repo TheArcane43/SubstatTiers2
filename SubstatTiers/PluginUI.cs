@@ -232,18 +232,18 @@ namespace SubstatTiers
 
                 // List of damage potencies
                 List<VisibleDamage> damageNums = new();
-                damageNums.Add(new VisibleDamage("Normal Damage", calc.DamageFormula(false, false)));
+                damageNums.Add(new VisibleDamage("Normal Damage", calc.DamageFormula(false, false, this.configuration.Potency)));
                 if (configuration.ShowVerboseDamage)
                 {
-                    damageNums.Add(new VisibleDamage("Damage on Critical Hits", calc.DamageFormula(true, false)));
-                    damageNums.Add(new VisibleDamage("Damage on Direct Hits", calc.DamageFormula(false, true)));
-                    damageNums.Add(new VisibleDamage("Damage on Critical Direct Hits", calc.DamageFormula(true, true)));
+                    damageNums.Add(new VisibleDamage("Damage on Critical Hits", calc.DamageFormula(true, false, this.configuration.Potency)));
+                    damageNums.Add(new VisibleDamage("Damage on Direct Hits", calc.DamageFormula(false, true, this.configuration.Potency)));
+                    damageNums.Add(new VisibleDamage("Damage on Critical Direct Hits", calc.DamageFormula(true, true, this.configuration.Potency)));
                 }
-                damageNums.Add(new VisibleDamage("Average Damage per 100 potency", calc.DamageAverage()));
+                damageNums.Add(new VisibleDamage("Average Damage", calc.DamageAverage(this.configuration.Potency)));
                 // Damage over time row
                 if (configuration.ShowVerboseDamage)
                 {
-                    damageNums.Add(new VisibleDamage("Damage Over Time Average", calc.DamageOverTimeAverage()));
+                    damageNums.Add(new VisibleDamage("Damage Over Time Average", calc.DamageOverTimeAverage(this.configuration.Potency)));
                 }
 
                 ImGui.Spacing();
@@ -358,7 +358,7 @@ namespace SubstatTiers
                     // Effect Table Setup
                     if (ImGui.BeginTable("tableEffects", 2, flags))
                     {
-                        ImGui.TableSetupColumn($"Stat", ImGuiTableColumnFlags.WidthFixed, 150);
+                        ImGui.TableSetupColumn($"Stat", ImGuiTableColumnFlags.WidthFixed, 170);
                         ImGui.TableSetupColumn($"Effect", ImGuiTableColumnFlags.WidthFixed, 50);
                         ImGui.TableHeadersRow();
 
@@ -406,11 +406,14 @@ namespace SubstatTiers
                     }
                     else
                     {
+                        bool v = this.configuration.ShowVerboseDamage;
+                        int columns = v ? 3 : 2;
                         // Potency Table setup
-                        if (ImGui.BeginTable("tablePotency", 2, flags))
+                        if (ImGui.BeginTable("tablePotency", columns, flags))
                         {
-                            ImGui.TableSetupColumn("Per 100 potency", ImGuiTableColumnFlags.WidthFixed);
+                            ImGui.TableSetupColumn($"Per {this.configuration.Potency} potency", ImGuiTableColumnFlags.WidthFixed);
                             ImGui.TableSetupColumn("Amount", ImGuiTableColumnFlags.WidthFixed);
+                            if (v) ImGui.TableSetupColumn("Range", ImGuiTableColumnFlags.WidthFixed);
                             ImGui.TableHeadersRow();
                             foreach (var row in damageNums)
                             {
@@ -419,6 +422,11 @@ namespace SubstatTiers
                                 ImGui.TextUnformatted(row.DamageName);
                                 ImGui.TableSetColumnIndex(1);
                                 ImGui.TextUnformatted(row.DamageNumber);
+                                if (v)
+                                {
+                                    ImGui.TableSetColumnIndex(2);
+                                    ImGui.TextUnformatted(row.DamageRange);
+                                }
                             }
                         }
                         ImGui.EndTable();
@@ -438,7 +446,7 @@ namespace SubstatTiers
                 return;
             }
 
-            ImGui.SetNextWindowSize(new Vector2(275, 220), ImGuiCond.Always);
+            ImGui.SetNextWindowSize(new Vector2(355, 270), ImGuiCond.Always);
             if (ImGui.Begin("Substat Tiers Settings", ref this.settingsVisible,
                 ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoScrollWithMouse))
             {
@@ -471,11 +479,33 @@ namespace SubstatTiers
                     this.configuration.ShowDamagePotency = configValue3;
                     this.configuration.Save();
                 }
+
                 ImGui.Indent(25);
+
+                var configValue6 = this.configuration.Potency;
+                var _configValue6 = configValue6;
+                ImGui.SetNextItemWidth(100);
+                if (ImGui.InputInt("Potency for Damage Calculations", ref _configValue6, 10))
+                {
+                    if (_configValue6 < 10) _configValue6 = 10;
+                    if (_configValue6 > 9999) _configValue6 = 9999;
+                    configValue6 = _configValue6;
+                    this.configuration.Potency = configValue6;
+                    this.configuration.Save();
+                }
+                if (ImGui.IsItemHovered())
+                {
+                    ImGui.SetTooltip("Must be between 10 and 9999");
+                }
+                if (ImGui.Button("Reset potency to 100"))
+                {
+                    this.configuration.Potency = 100;
+                    this.configuration.Save();
+                }
                 var configValue5 = this.configuration.ShowVerboseDamage;
                 if (configuration.ShowDamagePotency)
                 {
-                    if (ImGui.Checkbox("Verbose Damage output", ref configValue5))
+                    if (ImGui.Checkbox("Detailed Damage Output", ref configValue5))
                     {
                         this.configuration.ShowVerboseDamage = configValue5;
                         this.configuration.Save();
@@ -503,6 +533,7 @@ namespace SubstatTiers
                     ImGui.EndCombo();
                 }
 
+                
             }
             ImGui.End();
             

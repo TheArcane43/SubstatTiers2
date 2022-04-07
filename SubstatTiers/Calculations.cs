@@ -89,8 +89,10 @@ namespace SubstatTiers
             };
             if (isTank)
             {
-                c = (int)(c * 0.7); // Tank correction believed to be 0.7x
-                // TODO: test more levels (current tested lvs: 46)
+                double tankModifier = level <= 50 ? 0.7 : 0.75 + (level - 50) * 0.001;
+                c = (int)Math.Round(c * tankModifier, MidpointRounding.AwayFromZero);
+                // Tank correction believed to be 0.7x below 50, although lower levels are harder to test due to damage variance
+                // TODO: test more levels (current tested lvs: 46, 60, 90)
             }
             return c;
         }
@@ -147,9 +149,9 @@ namespace SubstatTiers
             return Formulas.StatFormula(div, crit, sub, coeff) + 1400;
         }
 
-        internal int DamageFormula(bool isCrit, bool isDirect)
+        internal int DamageFormula(bool isCrit, bool isDirect, int potency = 100)
         {
-            int pot = 100;
+            int pot = potency;
             int atk = FunctionAP();
             int det = FunctionDET();
             int tnc = Data.IsTank() ? FunctionTEN() : 1000;
@@ -158,9 +160,10 @@ namespace SubstatTiers
             int crit = isCrit ? FunctionCRIT() : 1000;
             int dh = isDirect ? 125 : 100;
 
-            // Formula (floor after every step): [potency * atk * det] / 100 / 1000 * tnc / 1000 * wep / 100 * trait / 100 * crit / 1000 * dh / 100
-            int baseCalc = (int)Math.Floor(Math.Floor(Math.Floor(Math.Floor(pot * atk * det / 100000.0) * tnc / 1000.0) * wep / 100.0) * tr / 100.0);
-            int procCalc = (int)Math.Floor(Math.Floor(baseCalc * crit / 1000.0) * dh / 100.0);
+            // Formula (floor after every step): [potency * atk * det / 100] / 1000 * tnc / 1000 * wep / 100 * trait / 100 * crit / 1000 * dh / 100
+            long baseCalc = (long)pot * atk * det / 100;
+            int flatCalc = (int)Math.Floor(Math.Floor(Math.Floor(Math.Floor(baseCalc / 1000.0) * tnc / 1000.0) * wep / 100.0) * tr / 100.0);
+            int procCalc = (int)Math.Floor(Math.Floor(flatCalc * crit / 1000.0) * dh / 100.0);
 
             // Testing!
             // PluginLog.Information($"Test calculations: {procCalc}");
@@ -168,12 +171,12 @@ namespace SubstatTiers
             return procCalc;
         }
 
-        internal int DamageAverage()
+        internal int DamageAverage(int potency = 100)
         {
-            int baseDamage = DamageFormula(false, false);
-            int critDamage = DamageFormula(true, false);
-            int dirDamage  = DamageFormula(false, true);
-            int dcDamage = DamageFormula(true, true);
+            int baseDamage = DamageFormula(false, false, potency);
+            int critDamage = DamageFormula(true, false, potency);
+            int dirDamage  = DamageFormula(false, true, potency);
+            int dcDamage = DamageFormula(true, true, potency);
 
             double critRate = GetUnits(StatConstants.SubstatType.Crit) / 1000.0 + 0.05;
             double dirRate = GetUnits(StatConstants.SubstatType.Direct) / 1000.0;
@@ -185,9 +188,9 @@ namespace SubstatTiers
             return (int)(noneRate * baseDamage + trueCritRate * critDamage + trueDirRate * dirDamage + dcRate * dcDamage);
         }
 
-        internal int DamageOverTimeFormula(bool isCrit, bool isDirect)
+        internal int DamageOverTimeFormula(bool isCrit, bool isDirect, int potency = 100)
         {
-            int pot = 100;
+            int pot = potency;
             int atk = FunctionAP();
             int det = FunctionDET();
             int tnc = Data.IsTank() ? FunctionTEN() : 1000;
@@ -198,18 +201,19 @@ namespace SubstatTiers
             int spd = FunctionSPD();
 
             // Formula (floor after every step): [see calculations below]
-            int baseCalc = (int)Math.Floor(Math.Floor(Math.Floor(pot * atk * det / 100000.0) * tnc / 1000.0) * wep / 100.0);
-            int speedCalc = (int)Math.Floor(Math.Floor(Math.Floor(baseCalc * spd / 1000.0) * tr / 100.0) + 1);
+            long baseCalc = (long)pot * atk * det / 100;
+            int flatCalc = (int)Math.Floor(Math.Floor(Math.Floor(baseCalc / 1000.0) * tnc / 1000.0) * wep / 100.0);
+            int speedCalc = (int)Math.Floor(Math.Floor(Math.Floor(flatCalc * spd / 1000.0) * tr / 100.0) + 1);
             int randCalc = (int)Math.Floor(Math.Floor(Math.Floor(speedCalc * crit / 1000.0) * dh / 100.0));
             return randCalc;
         }
 
-        internal int DamageOverTimeAverage()
+        internal int DamageOverTimeAverage(int potency = 100)
         {
-            int baseDamage = DamageOverTimeFormula(false, false);
-            int critDamage = DamageOverTimeFormula(true, false);
-            int dirDamage = DamageOverTimeFormula(false, true);
-            int dcDamage = DamageOverTimeFormula(true, true);
+            int baseDamage = DamageOverTimeFormula(false, false, potency);
+            int critDamage = DamageOverTimeFormula(true, false, potency);
+            int dirDamage = DamageOverTimeFormula(false, true, potency);
+            int dcDamage = DamageOverTimeFormula(true, true, potency);
 
             double critRate = GetUnits(StatConstants.SubstatType.Crit) / 1000.0 + 0.05;
             double dirRate = GetUnits(StatConstants.SubstatType.Direct) / 1000.0;
