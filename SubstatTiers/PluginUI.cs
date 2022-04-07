@@ -406,11 +406,14 @@ namespace SubstatTiers
                     }
                     else
                     {
+                        bool v = this.configuration.ShowVerboseDamage;
+                        int columns = v ? 3 : 2;
                         // Potency Table setup
-                        if (ImGui.BeginTable("tablePotency", 2, flags))
+                        if (ImGui.BeginTable("tablePotency", columns, flags))
                         {
                             ImGui.TableSetupColumn("Per 100 potency", ImGuiTableColumnFlags.WidthFixed);
                             ImGui.TableSetupColumn("Amount", ImGuiTableColumnFlags.WidthFixed);
+                            if (v) ImGui.TableSetupColumn("Range", ImGuiTableColumnFlags.WidthFixed);
                             ImGui.TableHeadersRow();
                             foreach (var row in damageNums)
                             {
@@ -419,6 +422,11 @@ namespace SubstatTiers
                                 ImGui.TextUnformatted(row.DamageName);
                                 ImGui.TableSetColumnIndex(1);
                                 ImGui.TextUnformatted(row.DamageNumber);
+                                if (v)
+                                {
+                                    ImGui.TableSetColumnIndex(2);
+                                    ImGui.TextUnformatted(row.DamageRange);
+                                }
                             }
                         }
                         ImGui.EndTable();

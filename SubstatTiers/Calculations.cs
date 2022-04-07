@@ -89,8 +89,10 @@ namespace SubstatTiers
             };
             if (isTank)
             {
-                c = (int)(c * 0.7); // Tank correction believed to be 0.7x
-                // TODO: test more levels (current tested lvs: 46)
+                double tankModifier = level <= 50 ? 0.7 : 0.75 + (level - 50) * 0.001;
+                c = (int)Math.Round(c * tankModifier, MidpointRounding.AwayFromZero);
+                // Tank correction believed to be 0.7x below 50, although lower levels are harder to test due to damage variance
+                // TODO: test more levels (current tested lvs: 46, 60, 90)
             }
             return c;
         }
