@@ -194,7 +194,7 @@ namespace SubstatTiers
             };
             if (level % 10 > 3)
             {
-                ilv += (level - 3) * 3;
+                ilv += ((level % 10) - 3) * 3;
             }
             return GetWeaponDamageFromIlv(ilv);
         }
