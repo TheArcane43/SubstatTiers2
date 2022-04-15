@@ -26,7 +26,7 @@ namespace SubstatTiers
             get { return this.visible; }
             set { this.visible = value; }
         }
-
+        // Settings window
         private bool settingsVisible = false;
         public bool SettingsVisible
         {
@@ -57,6 +57,7 @@ namespace SubstatTiers
 
             DrawMainWindow();
             DrawSettingsWindow();
+            DrawExtraWindow();
 
         }
 
@@ -438,6 +439,13 @@ namespace SubstatTiers
             ImGui.End();
         }
 
+        // Break each table into a function
+        private void DrawSubstatTiersTable()
+        {
+
+        }
+
+
         public void DrawSettingsWindow()
         {
             
@@ -457,40 +465,39 @@ namespace SubstatTiers
 
 
                 // can't ref a property, so use a local copy
-                var configValue = this.configuration.ShowSubstatEffects;
-                if (ImGui.Checkbox("Show Substat Effect table", ref configValue))
+                var configMateriaTable = this.configuration.ShowMateriaTiers;
+                if (ImGui.Checkbox("Show Materia Tier table", ref configMateriaTable))
                 {
-                    this.configuration.ShowSubstatEffects = configValue;
+                    this.configuration.ShowMateriaTiers = configMateriaTable;
                     // can save immediately on change, if you don't want to provide a "Save and Close" button
                     this.configuration.Save();
                 }
 
-                
-                var configValue2 = this.configuration.ShowMateriaTiers;
-                if (ImGui.Checkbox("Show Materia Tier table", ref configValue2))
+                var configEffects = this.configuration.ShowSubstatEffects;
+                if (ImGui.Checkbox("Show Substat Effect table", ref configEffects))
                 {
-                    this.configuration.ShowMateriaTiers = configValue2;
+                    this.configuration.ShowSubstatEffects = configEffects;
                     this.configuration.Save();
                 }
 
-                var configValue3 = this.configuration.ShowDamagePotency;
-                if (ImGui.Checkbox("Show Damage Potency", ref configValue3))
+                var configDamage = this.configuration.ShowDamagePotency;
+                if (ImGui.Checkbox("Show Damage Potency", ref configDamage))
                 {
-                    this.configuration.ShowDamagePotency = configValue3;
+                    this.configuration.ShowDamagePotency = configDamage;
                     this.configuration.Save();
                 }
 
                 ImGui.Indent(25);
 
-                var configValue6 = this.configuration.Potency;
-                var _configValue6 = configValue6;
+                var configPotency = this.configuration.Potency;
+                var _configPotency = configPotency;
                 ImGui.SetNextItemWidth(100);
-                if (ImGui.InputInt("Potency for Damage Calculations", ref _configValue6, 10))
+                if (ImGui.InputInt("Potency for Damage Calculations", ref _configPotency, 10))
                 {
-                    if (_configValue6 < 10) _configValue6 = 10;
-                    if (_configValue6 > 9999) _configValue6 = 9999;
-                    configValue6 = _configValue6;
-                    this.configuration.Potency = configValue6;
+                    if (_configPotency < 10) _configPotency = 10;
+                    if (_configPotency > 9999) _configPotency = 9999;
+                    configPotency = _configPotency;
+                    this.configuration.Potency = configPotency;
                     this.configuration.Save();
                 }
                 if (ImGui.IsItemHovered())
@@ -502,29 +509,29 @@ namespace SubstatTiers
                     this.configuration.Potency = 100;
                     this.configuration.Save();
                 }
-                var configValue5 = this.configuration.ShowVerboseDamage;
+                var configDetailedDamage = this.configuration.ShowVerboseDamage;
                 if (configuration.ShowDamagePotency)
                 {
-                    if (ImGui.Checkbox("Detailed Damage Output", ref configValue5))
+                    if (ImGui.Checkbox("Detailed Damage Output", ref configDetailedDamage))
                     {
-                        this.configuration.ShowVerboseDamage = configValue5;
+                        this.configuration.ShowVerboseDamage = configDetailedDamage;
                         this.configuration.Save();
                     }
                 }
                 ImGui.Unindent(25);
 
-                var configValue4 = this.configuration.LayoutType;
+                var configLayout = this.configuration.LayoutType;
                 string[] layouts = { "Horizontal", "Grid", "Vertical" };
                 ImGui.SetNextItemWidth(100);
-                if (ImGui.BeginCombo("Layout", layouts[configValue4]))
+                if (ImGui.BeginCombo("Layout", layouts[configLayout]))
                 {
                     for (var i = 0; i < layouts.Length; i++)
                     {
-                        bool is_selected = configValue4 == i;
+                        bool is_selected = configLayout == i;
                         if (ImGui.Selectable(layouts[i], is_selected))
                         {
-                            configValue4 = i;
-                            this.configuration.LayoutType = configValue4;
+                            configLayout = i;
+                            this.configuration.LayoutType = configLayout;
                             this.configuration.Save();
                         }
                         // initial selection
@@ -533,10 +540,33 @@ namespace SubstatTiers
                     ImGui.EndCombo();
                 }
 
-                
+                var configExtraWindow = this.configuration.ShowExtraWindow;
+                if (ImGui.Checkbox("Show Effects and Damage in Separate Window", ref configExtraWindow))
+                {
+                    this.configuration.ShowExtraWindow = configExtraWindow;
+                    this.configuration.Save();
+                }
+
             }
             ImGui.End();
             
         }
+
+        public void DrawExtraWindow()
+        {
+            if (!this.configuration.ShowExtraWindow /*|| !Visible*/)
+            {
+                return;
+            }
+            ImGui.SetNextWindowSize(new Vector2(350, 200), ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowSizeConstraints(new Vector2(350, 200), new Vector2(float.MaxValue, float.MaxValue));
+            if (ImGui.Begin("Effects and Damage", ImGuiWindowFlags.None | ImGuiWindowFlags.NoNavInputs))
+            {
+                ImGui.Text("Extra window!");
+            }
+            ImGui.End();
+        }
+
     }
+
 }
