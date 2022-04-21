@@ -29,9 +29,10 @@ namespace SubstatTiers
             this.Configuration.Initialize(this.PluginInterface);
 
             // you might normally want to embed resources and load them from the manifest stream
-            var imagePath = Path.Combine(PluginInterface.AssemblyLocation.Directory?.FullName!, "goat.png");
-            var goatImage = this.PluginInterface.UiBuilder.LoadImage(imagePath);
-            this.PluginUi = new PluginUI(this.Configuration, goatImage);
+            var imagePathBack = Path.Combine(PluginInterface.AssemblyLocation?.Directory?.FullName!, "background.png");
+            var backgroundImage = this.PluginInterface.UiBuilder.LoadImage(imagePathBack);
+
+            this.PluginUi = new PluginUI(this.Configuration, backgroundImage);
 
             this.CommandManager.AddHandler(commandName, new CommandInfo(OnCommand)
             {

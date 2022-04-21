@@ -14,7 +14,7 @@ namespace SubstatTiers
     {
         private Configuration configuration;
 
-        private ImGuiScene.TextureWrap goatImage;
+        private ImGuiScene.TextureWrap backgroundImage;
 
         // Have an instance of the AttributeData ready at all times
         private AttributeData? attributeData = null;
@@ -38,12 +38,12 @@ namespace SubstatTiers
         public PluginUI(Configuration configuration, ImGuiScene.TextureWrap goatImage)
         {
             this.configuration = configuration;
-            this.goatImage = goatImage;
+            this.backgroundImage = goatImage;
         }
 
         public void Dispose()
         {
-            this.goatImage.Dispose();
+            this.backgroundImage.Dispose();
         }
 
         public void Draw()
@@ -559,42 +559,31 @@ namespace SubstatTiers
             {
                 return;
             }
-            ImGui.SetNextWindowSize(new Vector2(350, 200), ImGuiCond.FirstUseEver);
-            ImGui.SetNextWindowSizeConstraints(new Vector2(350, 200), new Vector2(float.MaxValue, float.MaxValue));
-            if (ImGui.Begin("Effects and Damage", ImGuiWindowFlags.NoNavInputs | ImGuiWindowFlags.DockNodeHost))
+            int width = this.backgroundImage.Width;
+            int height = this.backgroundImage.Height;
+
+            Vector4 red = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
+            Vector4 green = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
+            Vector4 blue = new Vector4(0.0f, 0.0f, 1.0f, 1.0f);
+
+            var flags = ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize;
+
+            ImGui.SetNextWindowSize(new Vector2(width, height), ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowSizeConstraints(new Vector2(width, height), new Vector2(float.MaxValue, float.MaxValue));
+            if (ImGui.Begin("Effects and Damage", flags))
             {
-                this.attributeData = new();
-
-                if (attributeData is null || !attributeData.IsLoaded)
-                {
-                    ImGui.Text("Unable to obtain character info.");
-                    ImGui.End();
-                    return;
-                }
-                if (attributeData.CriticalHit < 20 || attributeData.SkillSpeed < 20)
-                {
-                    ImGui.Text("Substat Tiers does not work in this area.");
-                    ImGui.End();
-                    return;
-                }
-                if (attributeData.IsHandLand())
-                {
-                    ImGui.Text("Substats do not apply for your current class/job.");
-                    ImGui.End();
-                    return;
-                }
-                Calculations calc = new(attributeData);
-
-                DrawEffectsTable(calc);
-                if (this.configuration.ShowSubstatEffects) LayoutSpacing();
-                DrawDamageTable(calc);
-                if (!this.configuration.ShowSubstatEffects && !this.configuration.ShowDamagePotency)
-                {
-                    ImGui.Text("This window is only for Effects and Damage. Since you have both disabled, this window is empty.");
-                }
-
+                ImGui.Image(this.backgroundImage.ImGuiHandle, new Vector2(this.backgroundImage.Width, this.backgroundImage.Height));
+                ImGui.End();
             }
-            ImGui.End();
+            ImGui.SetNextWindowSize(new Vector2(width, height), ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowSizeConstraints(new Vector2(width, height), new Vector2(float.MaxValue, float.MaxValue));
+            if (ImGui.Begin("Text!", flags))
+            {
+                ImGui.TextColored(green, "Text text text?");
+                ImGui.TextColored(red, "More text!");
+                ImGui.TextColored(blue, "Third text.");
+                ImGui.End();
+            }
         }
 
     }
