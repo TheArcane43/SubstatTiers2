@@ -559,33 +559,72 @@ namespace SubstatTiers
             {
                 return;
             }
-            int width = this.backgroundImage.Width;
-            int height = this.backgroundImage.Height;
+            float scale = (float)(ImGui.GetFontSize() / 16);
+            int width = 450; //this.backgroundImage.Width;
+            int height = 252; //this.backgroundImage.Height;
+            Vector2 bgSize = new Vector2(width * scale, height * scale);
+            Vector2 clickableArea = new Vector2(bgSize.X + 30, bgSize.Y + 10);
 
             Vector4 red = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
             Vector4 green = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
             Vector4 blue = new Vector4(0.0f, 0.0f, 1.0f, 1.0f);
+            Vector4 black = new(0.05f, 0.05f, 0.05f, 1.0f);
 
-            var flags = ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize;
 
-            ImGui.SetNextWindowSize(new Vector2(width, height), ImGuiCond.FirstUseEver);
-            ImGui.SetNextWindowSizeConstraints(new Vector2(width, height), new Vector2(float.MaxValue, float.MaxValue));
+            var flags = ImGuiWindowFlags.NoNavFocus | ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoResize
+                | ImGuiWindowFlags.NoScrollbar;
+
+            ImGui.SetNextWindowSize(clickableArea, ImGuiCond.FirstUseEver);
+            ImGui.SetNextWindowSizeConstraints(clickableArea, clickableArea);
             if (ImGui.Begin("Effects and Damage", flags))
             {
-                ImGui.Image(this.backgroundImage.ImGuiHandle, new Vector2(this.backgroundImage.Width, this.backgroundImage.Height));
-                ImGui.End();
-            }
-            ImGui.SetNextWindowSize(new Vector2(width, height), ImGuiCond.FirstUseEver);
-            ImGui.SetNextWindowSizeConstraints(new Vector2(width, height), new Vector2(float.MaxValue, float.MaxValue));
-            if (ImGui.Begin("Text!", flags))
-            {
-                ImGui.TextColored(green, "Text text text?");
-                ImGui.TextColored(red, "More text!");
-                ImGui.TextColored(blue, "Third text.");
+                // TODO: maybe use a unispace font?
+                ImDrawListPtr d = ImGui.GetWindowDrawList();
+                Vector2 p0 = ImGui.GetCursorScreenPos();
+                Vector2 sz = new(bgSize.X, bgSize.Y);
+                Vector2 p1 = new(p0.X + sz.X + 20, p0.Y + sz.Y);
+                ImGui.PushClipRect(p0, p1, false);
+
+                d.AddImage(this.backgroundImage.ImGuiHandle, p0, p1);
+
+                ImGui.SetWindowFontScale(0.90f);
+
+                ImGui.SetCursorPosY(35 * scale);
+                ImGui.SetCursorPosX(80 * scale);
+
+                
+                if (ImGui.BeginTable("Name", 1))
+                {
+
+                    TableText(green, "Text text text?");
+
+                    TableText(red, "More text!");
+
+                    TableText(blue, "Third text.");
+
+                    ImGui.EndTable();
+                }
+                ImGui.SetCursorPosY(100 * scale);
+                ImGui.SetCursorPosX(80 * scale);
+                if (ImGui.BeginTable("Important Stats", 1))
+                {
+                    TableText(black, "    300");
+                    TableText(black, "-   350");
+                    TableText(black, "52005 / 52005");
+                    TableText(black, " 9704 / 10000");
+                    ImGui.EndTable();
+                }
+                ImGui.PopClipRect();
                 ImGui.End();
             }
         }
 
+        private void TableText(Vector4 color, string text)
+        {
+            ImGui.TableNextRow();
+            ImGui.TableNextColumn();
+            ImGui.TextColored(color, text);
+        }
     }
-
+    
 }
