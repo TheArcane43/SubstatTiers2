@@ -2,7 +2,7 @@
   "Author": "TheArcane43",
   "Name": "Substat Tiers",
   "InternalName": "SubstatTiers",
-  "AssemblyVersion": "0.5.1.0",
+  "AssemblyVersion": "0.6.1.7",
   "RepoUrl": "https://github.com/TheArcane43/SubstatTiers2",
   "Description": "Gives a detailed table of how your substats work. Includes substat tiering, substat effects, potential tier gains on materia, and estimated damage amounts.",
   "ApplicableVersion": "any",
@@ -15,5 +15,5 @@
   "DalamudApiLevel": 6,
   "LoadPriority": 0,
   "Punchline": "Show how substats tier and what effects you get from them.",
-  "Changelog": "Changes from 0.5.0.1:\n - Extra window for certain tables.\n - More coming soon!"
+  "Changelog": "Secret project button in settings!"
 }

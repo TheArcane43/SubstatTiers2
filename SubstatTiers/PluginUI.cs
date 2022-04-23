@@ -14,10 +14,11 @@ namespace SubstatTiers
     {
         private Configuration configuration;
 
-        private ImGuiScene.TextureWrap backgroundImage;
+        private readonly ImGuiScene.TextureWrap backgroundImage;
 
-        // Have an instance of the AttributeData ready at all times
-        private AttributeData? attributeData = null;
+        // Have an instance of the Calculations ready at all times
+        private Calculations? calc = null;
+        private StatEffects? StatEffects = null;
 
         // this extra bool exists for ImGui, since you can't ref a property
         private bool visible = false;
@@ -85,7 +86,7 @@ namespace SubstatTiers
                 //ImGui.Image(this.goatImage.ImGuiHandle, new Vector2(this.goatImage.Width, this.goatImage.Height));
                 //ImGui.Unindent(55);
                 
-                this.attributeData = new();
+                AttributeData attributeData = new();
                 
                 if (attributeData is null || !attributeData.IsLoaded)
                 {
@@ -105,7 +106,8 @@ namespace SubstatTiers
                     ImGui.End();
                     return;
                 }
-                Calculations calc = new(attributeData);
+                calc = new(attributeData);
+                StatEffects = new(calc);
 
 
                 // Main information -------------------------------------------
@@ -183,7 +185,7 @@ namespace SubstatTiers
             statList.Add(new VisibleInfo(StatConstants.SubstatType.Crit.VisibleName(), calc.Data.CriticalHit, calc.Data.CriticalHit - prevCritHit, nextCritHit - calc.Data.CriticalHit));
             statList.Add(new VisibleInfo(StatConstants.SubstatType.Det.VisibleName(), calc.Data.Determination, calc.Data.Determination - prevDetermination, nextDetermination - calc.Data.Determination));
             statList.Add(new VisibleInfo(StatConstants.SubstatType.Direct.VisibleName(), calc.Data.DirectHit, calc.Data.DirectHit - prevDirectHit, nextDirectHit - calc.Data.DirectHit));
-            if (attributeData!.UsesAttackPower())
+            if (calc.Data!.UsesAttackPower())
             {
                 statList.Add(new VisibleInfo(StatConstants.SubstatType.SkSpd.VisibleName(), calc.Data.SkillSpeed, calc.Data.SkillSpeed - prevSkillSpeed, nextSkillSpeed - calc.Data.SkillSpeed));
             }
@@ -191,18 +193,18 @@ namespace SubstatTiers
             {
                 statList.Add(new VisibleInfo(StatConstants.SubstatType.SpSpd.VisibleName(), calc.Data.SpellSpeed, calc.Data.SpellSpeed - prevSpellSpeed, nextSpellSpeed - calc.Data.SpellSpeed));
             }
-            if (attributeData.IsTank())
+            if (calc.Data.IsTank())
             {
                 statList.Add(new VisibleInfo(StatConstants.SubstatType.Ten.VisibleName(), calc.Data.Tenacity, calc.Data.Tenacity - prevTenacity, nextTenacity - calc.Data.Tenacity));
             }
-            if (attributeData.IsHealer())
+            if (calc.Data.IsHealer())
             {
                 statList.Add(new VisibleInfo(StatConstants.SubstatType.Piety.VisibleName(), calc.Data.Piety, calc.Data.Piety - prevPiety, nextPiety - calc.Data.Piety));
             }
 
             statList.Add(new VisibleInfo("GCD(Base)", calc.GetGCDbase(), calc.Speed - prevGCDBase, nextGCDBase - calc.Speed));
 
-            if (attributeData.HasteAmount() > 0)
+            if (calc.Data.HasteAmount() > 0)
             {
                 statList.Add(new VisibleInfo("GCD +", calc.GetGCDmodified(), calc.Speed - prevGCDModified, nextGCDModified - calc.Speed));
             }
@@ -210,7 +212,7 @@ namespace SubstatTiers
             ImGuiTableFlags flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.NoHostExtendX;
             if (ImGui.BeginTable("tableStats", 4, flags))
             {
-                ImGui.TableSetupColumn($"{attributeData.GetJobTL()} Lv{calc.Data.Level}", ImGuiTableColumnFlags.WidthFixed);
+                ImGui.TableSetupColumn($"{calc.Data.GetJobTL()} Lv{calc.Data.Level}", ImGuiTableColumnFlags.WidthFixed);
                 ImGui.TableSetupColumn($"Stat", ImGuiTableColumnFlags.WidthFixed, 50);
                 ImGui.TableSetupColumn($"Over", ImGuiTableColumnFlags.WidthFixed, 40);
                 ImGui.TableSetupColumn($"Next", ImGuiTableColumnFlags.WidthFixed, 40);
@@ -258,7 +260,7 @@ namespace SubstatTiers
                 materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Crit));
                 materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Det));
                 materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Direct));
-                if (attributeData!.UsesAttackPower())
+                if (calc.Data!.UsesAttackPower())
                 {
                     materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.SkSpd));
                 }
@@ -266,16 +268,16 @@ namespace SubstatTiers
                 {
                     materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.SpSpd));
                 }
-                if (attributeData.IsTank())
+                if (calc.Data.IsTank())
                 {
                     materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Ten));
                 }
-                if (attributeData.IsHealer())
+                if (calc.Data.IsHealer())
                 {
                     materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.Piety));
                 }
                 materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.GCDbase));
-                if (attributeData.HasteAmount() > 0)
+                if (calc.Data.HasteAmount() > 0)
                 {
                     materiaTiers.Add(new VisibleMateria(calc, StatConstants.SubstatType.GCDmodified));
                 }
@@ -284,7 +286,7 @@ namespace SubstatTiers
                 ImGuiTableFlags flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.NoHostExtendX;
                 if (ImGui.BeginTable("tableMateria", 5, flags))
                 {
-                    int[] titles = VisibleMateria.MateriaTiersAt(attributeData.Level);
+                    int[] titles = VisibleMateria.MateriaTiersAt(calc.Data.Level);
                     ImGui.TableSetupColumn("Materia:", ImGuiTableColumnFlags.WidthFixed, 100);
                     ImGui.TableSetupColumn($"+ {titles[0]}", ImGuiTableColumnFlags.WidthFixed, 30);
                     ImGui.TableSetupColumn($"+ {titles[1]}", ImGuiTableColumnFlags.WidthFixed, 30);
@@ -333,7 +335,7 @@ namespace SubstatTiers
                 effects.Add(new VisibleEffect("Critical Damage", $"+{unitsCritHit * 0.001 + 0.40:P1}", "Damage bonus when you hit a critical hit"));
                 effects.Add(new VisibleEffect("Determination", $"+{unitsDetermination * 0.001:P1}", "Overall increase in outgoing damage and healing"));
                 effects.Add(new VisibleEffect("Direct Hit Rate", $"{unitsDirectHit * 0.001:P1}", "The frequency of direct hits"));
-                if (attributeData!.UsesAttackPower())
+                if (calc.Data!.UsesAttackPower())
                 {
                     effects.Add(new VisibleEffect("DoT Bonus", $"+{unitsSkillSpeed * 0.001:P1}", "Damage bonus on damage over time effects"));
                 }
@@ -341,18 +343,18 @@ namespace SubstatTiers
                 {
                     effects.Add(new VisibleEffect("DoT Bonus", $"+{unitsSpellSpeed * 0.001:P1}", "Damage bonus on damage over time effects"));
                 }
-                if (attributeData.IsTank())
+                if (calc.Data.IsTank())
                 {
                     effects.Add(new VisibleEffect("Tenacity Bonus", $"+{unitsTenacity * 0.001:P1}", "Extra damage, mitigation, and outgoing healing as a tank"));
                 }
-                if (attributeData.IsHealer())
+                if (calc.Data.IsHealer())
                 {
                     effects.Add(new VisibleEffect("MP Regen per tick", $"{unitsPiety + 200} MP", "MP recovery every 3 seconds"));
                 }
                 effects.Add(new VisibleEffect("GCD (Base)", $"{calc.GetGCDbase():F2}", "Recast time for most actions with a base of 2.50 seconds"));
-                if (attributeData.HasteAmount() > 0)
+                if (calc.Data.HasteAmount() > 0)
                 {
-                    effects.Add(new VisibleEffect($"GCD ({attributeData.HasteName()})", $"{calc.GetGCDmodified():F2}", "Recast time when under the given effect"));
+                    effects.Add(new VisibleEffect($"GCD ({calc.Data.HasteName()})", $"{calc.GetGCDmodified():F2}", "Recast time when under the given effect"));
                 }
                 effects.Add(new VisibleEffect("Defense", $"{unitsDefense}%", "Physical Damage Mitigation due to Defense stat"));
                 effects.Add(new VisibleEffect("Magic Defense", $"{unitsMagicDefense}%", "Magical Damage Mitigation due to Magic Defense stat"));
@@ -542,7 +544,7 @@ namespace SubstatTiers
                 }
 
                 var configExtraWindow = this.configuration.ShowExtraWindow;
-                if (ImGui.Checkbox("Show Effects and Damage in Separate Window", ref configExtraWindow))
+                if (ImGui.Checkbox("Show 'Special' Damage Window", ref configExtraWindow))
                 {
                     this.configuration.ShowExtraWindow = configExtraWindow;
                     this.configuration.Save();
@@ -559,15 +561,20 @@ namespace SubstatTiers
             {
                 return;
             }
+            if (StatEffects is null || calc is null)
+            {
+                return;
+            }
             float scale = (float)(ImGui.GetFontSize() / 16);
             int width = 450; //this.backgroundImage.Width;
             int height = 252; //this.backgroundImage.Height;
-            Vector2 bgSize = new Vector2(width * scale, height * scale);
-            Vector2 clickableArea = new Vector2(bgSize.X + 30, bgSize.Y + 10);
+            Vector2 bgSize = new(width * scale, height * scale);
+            Vector2 clickableArea = new(bgSize.X + 30, bgSize.Y + 10);
 
-            Vector4 red = new Vector4(1.0f, 0.0f, 0.0f, 1.0f);
-            Vector4 green = new Vector4(0.0f, 1.0f, 0.0f, 1.0f);
-            Vector4 blue = new Vector4(0.0f, 0.0f, 1.0f, 1.0f);
+            Vector4 red = new(1.0f, 0.0f, 0.0f, 1.0f);
+            Vector4 purple = new(1.0f, 0.0f, 0.75f, 1.0f);
+            Vector4 green = new(0.0f, 0.75f, 0.0f, 1.0f);
+            Vector4 blue = new(0.0f, 0.0f, 1.0f, 1.0f);
             Vector4 black = new(0.05f, 0.05f, 0.05f, 1.0f);
 
 
@@ -578,7 +585,7 @@ namespace SubstatTiers
             ImGui.SetNextWindowSizeConstraints(clickableArea, clickableArea);
             if (ImGui.Begin("Effects and Damage", flags))
             {
-                // TODO: maybe use a unispace font?
+                
                 ImDrawListPtr d = ImGui.GetWindowDrawList();
                 Vector2 p0 = ImGui.GetCursorScreenPos();
                 Vector2 sz = new(bgSize.X, bgSize.Y);
@@ -588,43 +595,217 @@ namespace SubstatTiers
                 d.AddImage(this.backgroundImage.ImGuiHandle, p0, p1);
 
                 ImGui.SetWindowFontScale(0.90f);
+                Vector2 TopThreeAnchor = new(80 * scale, 35 * scale);
+                ImGui.SetCursorPos(TopThreeAnchor);
 
-                ImGui.SetCursorPosY(35 * scale);
-                ImGui.SetCursorPosX(80 * scale);
+                // Top three
+                ImGui.TextColored(black, calc.Data.CharacterName);
+                RowSpacing(TopThreeAnchor, 1, scale);
+                ImGui.TextColored(black, calc.Data.GetJobTL());
+                RowSpacing(TopThreeAnchor, 2, scale);
+                ImGui.TextColored(black, "Unable to retrieve.");
 
-                
-                if (ImGui.BeginTable("Name", 1))
+                // Average Damage
+                Vector2 AvgDamageAnchor = new(80 * scale, 96 * scale);
+                ImGui.SetCursorPos(AvgDamageAnchor);
+                ImGui.TextColored(red, $"Per {configuration.Potency} Potency:");
+                DamageSpacing(AvgDamageAnchor, 1, scale);
+                int avgDamage = calc.DamageAverage(configuration.Potency);
+                ImGui.TextColored(red, $" {(int)(avgDamage * 0.95):N0} - {(int)(avgDamage * 1.05):N0}");
+
+                // HP and MP
+                Vector2 HpAnchor = new(80 * scale, 136 * scale);
+                ImGui.SetCursorPos(HpAnchor);
+                ImGui.TextColored(black, $"{calc.Data.MaxHP:N0}");
+                RowSpacing(HpAnchor, 1, scale);
+                ImGui.TextColored(black, $"{calc.Data.MaxMP:N0}");
+
+                // Main Stat
+                Vector2 StatAnchor = new(80 * scale, 176 * scale);
+                ImGui.SetCursorPos(StatAnchor);
+                int bonusStrength = calc.Data.Strength - calc.Data.BaseStrength;
+                if (bonusStrength > 0)
                 {
-
-                    TableText(green, "Text text text?");
-
-                    TableText(red, "More text!");
-
-                    TableText(blue, "Third text.");
-
-                    ImGui.EndTable();
+                    ImGui.TextColored(black, $"{calc.Data.Strength} ({calc.Data.BaseStrength}+{bonusStrength})");
                 }
-                ImGui.SetCursorPosY(100 * scale);
-                ImGui.SetCursorPosX(80 * scale);
-                if (ImGui.BeginTable("Important Stats", 1))
+                else
                 {
-                    TableText(black, "    300");
-                    TableText(black, "-   350");
-                    TableText(black, "52005 / 52005");
-                    TableText(black, " 9704 / 10000");
-                    ImGui.EndTable();
+                    ImGui.TextColored(black, $"{calc.Data.Strength}");
                 }
+                RowSpacing(StatAnchor, 1, scale);
+                int bonusDexterity = calc.Data.Dexterity - calc.Data.BaseDexterity;
+                if (bonusDexterity > 0)
+                {
+                    ImGui.TextColored(black, $"{calc.Data.Dexterity} ({calc.Data.BaseDexterity}+{bonusDexterity})");
+                }
+                else
+                {
+                    ImGui.TextColored(black, $"{calc.Data.Dexterity}");
+                }
+                RowSpacing(StatAnchor, 2, scale);
+                int bonusIntelligence = calc.Data.Intelligence - calc.Data.BaseIntelligence;
+                if (bonusIntelligence > 0)
+                {
+                    ImGui.TextColored(black, $"{calc.Data.Intelligence} ({calc.Data.BaseIntelligence}+{bonusIntelligence})");
+                }
+                else
+                {
+                    ImGui.TextColored(black, $"{calc.Data.Intelligence}");
+                }
+                RowSpacing(StatAnchor, 3, scale);
+                int bonusMind = calc.Data.Mind - calc.Data.BaseMind;
+                if (bonusMind > 0)
+                {
+                    ImGui.TextColored(black, $"{calc.Data.Mind} ({calc.Data.BaseMind}+{bonusMind})");
+                }
+                else
+                {
+                    ImGui.TextColored(black, $"{calc.Data.Mind}");
+                }
+
+                // Base Damage
+                Vector2 BaseDamageAnchor = new(316 * scale, 49 * scale);
+                ImGui.SetCursorPos(BaseDamageAnchor);
+                ImGui.TextColored(black, $"Per {configuration.Potency} Potency:");
+                DamageSpacing(BaseDamageAnchor, 1, scale);
+                int baseDamage = calc.DamageFormula(false, false, configuration.Potency);
+                ImGui.TextColored(black, $" {(int)(baseDamage * 0.95):N0} - {(int)(baseDamage * 1.05):N0}");
+
+                // Left column stats
+                Vector2 leftStatAnchor = new(350 * scale, 83 * scale);
+                string[] list = StatEffects.GetLeftList();
+                for (int i = 0; i < list.Length; i++)
+                {
+                    Vector4 currentColor = black;
+                    if (i == 4) currentColor = purple;
+                    if (i == 5) currentColor = blue;
+                    if (i == 6) currentColor = green;
+                    RightAlignedColoredText(list[i], new(leftStatAnchor.X, leftStatAnchor.Y + 18 * scale * i), currentColor);
+                }
+                // Right column stats
+                Vector2 rightStatAnchor = new(470 * scale, 83 * scale);
+                string[] list2 = StatEffects.GetRightList();
+                for (int i = 0; i < list2.Length; i++)
+                {
+                    Vector4 currentColor = black;
+                    if (i == 4) currentColor = purple;
+                    if (i == 5) currentColor = blue;
+                    if (i == 6) currentColor = green;
+                    RightAlignedColoredText(list2[i], new(rightStatAnchor.X, rightStatAnchor.Y + 18 * scale * i), currentColor);
+                }
+                //RightAlignedColoredText($"32.5%", new(325, 119), red);
+                //RightAlignedColoredText($"4.7%", new(325, 119+18), blue);
+                //RightAlignedColoredText($"17%", new(325, 119+36), black);
+
                 ImGui.PopClipRect();
                 ImGui.End();
             }
         }
 
-        private void TableText(Vector4 color, string text)
+        private static void RowSpacing(Vector2 curPos, double spaces, float scale)
         {
-            ImGui.TableNextRow();
-            ImGui.TableNextColumn();
+            // Normal spacing: 18px
+            curPos.Y += scale * (float)spaces * 18;
+            ImGui.SetCursorPos(curPos);
+        }
+        private static void DamageSpacing(Vector2 curPos, double spaces, float scale)
+        {
+            // Damage spacing: 15px
+            curPos.Y += scale * (float)spaces * 15;
+            ImGui.SetCursorPos(curPos);
+        }
+        private static void RightAlignedColoredText(string text, Vector2 pixelMidRight, Vector4 color)
+        {
+            pixelMidRight.X -= ImGui.CalcTextSize(text).X;
+            ColoredTextAt(text, pixelMidRight, color);
+        }
+
+        private static void ColoredTextAt(string text, float x, float y, Vector4 color)
+        {
+            ImGui.SetCursorPosX(x);
+            ImGui.SetCursorPosY(y);
             ImGui.TextColored(color, text);
         }
+        private static void ColoredTextAt(string text, Vector2 pos, Vector4 color)
+        {
+            ColoredTextAt(text, pos.X, pos.Y, color);
+        }
+
     }
     
+    internal class StatEffects
+    {
+        internal int CriticalHit { get; set; }
+        internal int DirectHit { get; set; }
+        internal int Determination { get; set; }
+        internal int Speed { get; set; }
+        internal int Tenacity { get; set; }
+        internal int Piety { get; set; }
+        internal int Defense { get; set; }
+        internal int MagicDefense { get; set; }
+
+        internal int unitsCriticalHit;
+        internal int unitsDirectHit;
+        internal int unitsDetermination;
+        internal int unitsSpeed;
+        internal int unitsTenacity;
+        internal int unitsPiety;
+        internal int unitsDefense;
+        internal int unitsMagicDefense;
+
+        internal StatEffects(Calculations calc)
+        {
+            if (calc is null) return;
+            CriticalHit = calc.Data.CriticalHit;
+            DirectHit = calc.Data.DirectHit;
+            Determination = calc.Data.Determination;
+            Speed = calc.Data.UsesAttackPower() ? calc.Data.SkillSpeed : calc.Data.SpellSpeed;
+            Tenacity = calc.Data.Tenacity;
+            Piety = calc.Data.Piety;
+            Defense = calc.Data.Defense;
+            MagicDefense = calc.Data.MagicDefense;
+
+            unitsCriticalHit = calc.GetUnits(StatConstants.SubstatType.Crit);
+            unitsDetermination = calc.GetUnits(StatConstants.SubstatType.Det);
+            unitsDirectHit = calc.GetUnits(StatConstants.SubstatType.Direct);
+            unitsSpeed = calc.Data.UsesAttackPower() ? calc.GetUnits(StatConstants.SubstatType.SkSpd) : calc.GetUnits(StatConstants.SubstatType.SpSpd);
+            unitsTenacity = calc.GetUnits(StatConstants.SubstatType.Ten);
+            unitsPiety = calc.GetUnits(StatConstants.SubstatType.Piety);
+            unitsDefense = calc.GetUnits(StatConstants.SubstatType.Defense);
+            unitsMagicDefense = calc.GetUnits(StatConstants.SubstatType.MagicDefense);
+
+        }
+
+        internal string[] GetLeftList()
+        {
+            return new string[]
+            {
+                $"{CriticalHit} ",
+                $"{unitsCriticalHit * 0.1 + 40:F1}%%",
+                $"{DirectHit} ",
+                $"{Determination} ",
+                $"{Speed} ",
+                $"{Tenacity} ",
+                $"{Piety} ",
+                $"{Defense} ",
+                $"{MagicDefense} "
+            };
+        }
+        internal string[] GetRightList()
+        {
+            return new string[]
+            {
+                $"{unitsCriticalHit * 0.1 + 5:F1}%%",
+                " ",
+                $"{unitsDirectHit * 0.1:F1}%%",
+                $"{unitsDetermination * 0.1:F1}%%",
+                $"{unitsSpeed * 0.1:F1}%%",
+                $"{unitsTenacity * 0.1:F1}%%",
+                $"{unitsPiety + 200:D0}  ",
+                $"{unitsDefense:D0}%%",
+                $"{unitsMagicDefense:D0}%%"
+            };
+        }
+    }
+
 }

@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Authors></Authors>
     <Company></Company>
-    <Version>0.5.1.0</Version>
+    <Version>0.6.1.7</Version>
     <Description>Displays substat tiers and effects.</Description>
     <Copyright></Copyright>
     <PackageProjectUrl>https://github.com/TheArcane43/SubstatTiers2</PackageProjectUrl>

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Dalamud;
 using Dalamud.Logging;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
 using FFXIVClientStructs.FFXIV.Client.Game.UI;
 using Lumina.Excel.GeneratedSheets;
 
@@ -13,17 +14,22 @@ namespace SubstatTiers
 
     internal class AttributeData
     {
-
+        internal string CharacterName { get; set; }
         // Main stats
         internal int Level { get; set; }
         internal bool IsSynced { get; set; }
         internal bool HasAccurateWeaponDamage { get; set; }
         internal JobThreeLetter JobId { get; set; }
         internal int Strength { get; set; }
+        internal int BaseStrength { get; set; }
         internal int Dexterity { get; set; }
+        internal int BaseDexterity { get; set; }
         internal int Vitality { get; set; }
+        internal int BaseVitality { get; set; }
         internal int Intelligence { get; set; }
+        internal int BaseIntelligence { get; set; }
         internal int Mind { get; set; }
+        internal int BaseMind { get; set; }
 
         // substats
         internal int CriticalHit { get; set; }
@@ -35,7 +41,9 @@ namespace SubstatTiers
         internal int Piety { get; set; }
 
         // other stats
+        internal int CurrentHP { get; set; }
         internal int MaxHP { get; set; }
+        internal int CurrentMP { get; set; }
         internal int MaxMP { get; set; }
         internal int MaxTP { get; set; }
         internal int AutoAttackDelay { get; set; }
@@ -68,6 +76,22 @@ namespace SubstatTiers
             // and other fields like CurrentLevel, CurrentClassJobId, etc.
 
             IsLoaded = aState.IsLoaded > 0;
+            if (!IsLoaded)
+            {
+                CharacterName = "No character found";
+                return;
+            }
+            var name = aState.CharacterName;
+            int t = 0;
+            for (int i = 0; i < 64; i++)
+            {
+                if (name[i] == 0)
+                {
+                    t = i;
+                    break;
+                }
+            }
+            CharacterName = System.Text.Encoding.Default.GetString(name, t);
 
             byte Synced = aState.IsLevelSynced;
             if (Synced > 0)
@@ -119,7 +143,14 @@ namespace SubstatTiers
 
             JobId = (JobThreeLetter)aState.CurrentClassJobId;
 
-            // TODO: figure out how to get synced weapon damage (currently using workaround)
+            BaseStrength = aState.BaseStrength;
+            BaseDexterity = aState.BaseDexterity;
+            BaseVitality = aState.BaseVitality;
+            BaseIntelligence = aState.BaseIntelligence;
+            BaseMind = aState.BaseMind;
+
+            // Workaround to get synced weapon damage
+            // TODO: Find weapon damage based on map
 
             var r = InventoryManager.Instance()->GetInventoryContainer(InventoryType.EquippedItems)->Items[0];
             var w = r.ItemID;

@@ -7,7 +7,7 @@ namespace SubstatTiers
     [Serializable]
     public class Configuration : IPluginConfiguration
     {
-        public int Version { get; set; } = 5;
+        public int Version { get; set; } = 6;
 
         public bool ShowMateriaTiers { get; set; } = true;
         public bool ShowExtraWindow { get; set; } = true;
