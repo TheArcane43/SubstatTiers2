@@ -79,22 +79,31 @@ namespace SubstatTiers
         }
         private static int AttackConstant(bool isTank, int level)
         {
-            int c = level switch
-            {
-                <= 50 => 75,
-                <= 70 => (int)Math.Floor(2.5 * (level - 50)) + 75,
-                <= 80 => 4 * (level - 70) + 125,
-                <= 90 => 3 * (level - 80) + 165,
-                _ => 195,
-            };
             if (isTank)
             {
-                double tankModifier = level <= 50 ? 0.7 : 0.75 + (level - 50) * 0.001;
-                c = (int)Math.Round(c * tankModifier, MidpointRounding.AwayFromZero);
-                // Tank correction believed to be 0.7x below 50, although lower levels are harder to test due to damage variance
-                // TODO: test more levels (current tested lvs: 46, 60, 90)
+                return level switch
+                {
+                    <= 50 => 52,
+                    <= 60 => (int)Math.Floor(1.75 * (level - 50)) + 53,
+                    <= 70 => (int)Math.Floor(2.7 * (level - 60)) + 78,
+                    <= 80 => level + 35, // 1 * (level - 70) + 105
+                    <= 90 => 4 * (level - 80) + 115,
+                    _ => 156,
+                };
+                // Tank attack constant is tested for 60, 70-80, 90
             }
-            return c;
+            else
+            {
+                return level switch
+                {
+                    <= 50 => 75,
+                    <= 70 => (int)Math.Floor(2.5 * (level - 50)) + 75,
+                    <= 80 => 4 * (level - 70) + 125,
+                    <= 90 => 3 * (level - 80) + 165,
+                    _ => 195,
+                };
+            }
+            
         }
 
         private int FunctionAP()
