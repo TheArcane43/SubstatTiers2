@@ -57,7 +57,7 @@ namespace SubstatTiers
 
             DrawMainWindow();
             DrawSettingsWindow();
-            DrawExtraWindow();
+            // DrawExtraWindow();
 
         }
 
@@ -121,14 +121,15 @@ namespace SubstatTiers
                 DrawSubstatTiersTable(calc);
                 LayoutSpacing();
                 DrawMateriaTiersTable(calc);
-                if (!this.configuration.ShowExtraWindow)
-                {
+                
+                //if (!this.configuration.ShowExtraWindow)
+                //{
                     LayoutSpacing();
                     DrawEffectsTable(calc);
-                    LayoutSpacing();
-                    DrawDamageTable(calc);
-                }
-
+                    //LayoutSpacing();
+                    //DrawDamageTable(calc);
+                //}
+                
 
             }
             ImGui.End();
@@ -324,8 +325,8 @@ namespace SubstatTiers
                 int unitsSpellSpeed = calc.GetUnits(StatConstants.SubstatType.SpSpd);
                 int unitsTenacity = calc.GetUnits(StatConstants.SubstatType.Ten);
                 int unitsPiety = calc.GetUnits(StatConstants.SubstatType.Piety);
-                int unitsDefense = calc.GetUnits(StatConstants.SubstatType.Defense);
-                int unitsMagicDefense = calc.GetUnits(StatConstants.SubstatType.MagicDefense);
+                //int unitsDefense = calc.GetUnits(StatConstants.SubstatType.Defense);
+                //int unitsMagicDefense = calc.GetUnits(StatConstants.SubstatType.MagicDefense);
 
                 // List of effects
                 List<VisibleEffect> effects = new();
@@ -354,8 +355,8 @@ namespace SubstatTiers
                 {
                     effects.Add(new VisibleEffect($"GCD ({attributeData.HasteName()})", $"{calc.GetGCDmodified():F2}", "Recast time when under the given effect"));
                 }
-                effects.Add(new VisibleEffect("Defense", $"{unitsDefense}%", "Physical Damage Mitigation due to Defense stat"));
-                effects.Add(new VisibleEffect("Magic Defense", $"{unitsMagicDefense}%", "Magical Damage Mitigation due to Magic Defense stat"));
+                //effects.Add(new VisibleEffect("Defense", $"{unitsDefense}%", "Physical Damage Mitigation due to Defense stat"));
+                //effects.Add(new VisibleEffect("Magic Defense", $"{unitsMagicDefense}%", "Magical Damage Mitigation due to Magic Defense stat"));
 
                 // Effect Table Setup
                 ImGuiTableFlags flags = ImGuiTableFlags.RowBg | ImGuiTableFlags.Borders | ImGuiTableFlags.NoHostExtendX;
@@ -481,14 +482,14 @@ namespace SubstatTiers
                     this.configuration.ShowSubstatEffects = configEffects;
                     this.configuration.Save();
                 }
-
+                /*
                 var configDamage = this.configuration.ShowDamagePotency;
                 if (ImGui.Checkbox("Show Damage Potency", ref configDamage))
                 {
                     this.configuration.ShowDamagePotency = configDamage;
                     this.configuration.Save();
                 }
-
+                
                 ImGui.Indent(25);
                 if (configuration.ShowDamagePotency)
                 {
@@ -520,6 +521,7 @@ namespace SubstatTiers
                     }
                 }
                 ImGui.Unindent(25);
+                */
 
                 var configLayout = this.configuration.LayoutType;
                 string[] layouts = { "Horizontal", "Vertical" };
@@ -540,14 +542,14 @@ namespace SubstatTiers
                     }
                     ImGui.EndCombo();
                 }
-
+                /*
                 var configExtraWindow = this.configuration.ShowExtraWindow;
                 if (ImGui.Checkbox("Show Effects and Damage in Separate Window", ref configExtraWindow))
                 {
                     this.configuration.ShowExtraWindow = configExtraWindow;
                     this.configuration.Save();
                 }
-
+                */
             }
             ImGui.End();
             

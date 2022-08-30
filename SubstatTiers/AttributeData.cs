@@ -62,12 +62,21 @@ namespace SubstatTiers
         // default constructor dereferences the instance pointer
         public unsafe AttributeData()
         {
-            var aState = UIState.Instance()->PlayerState;
+            var inst = UIState.Instance();
+            var aState = inst->PlayerState;
             // aState is an object with the player state
             // it has an array of 74 `int` fields (Attributes), this code links known fields to useful variables
             // and other fields like CurrentLevel, CurrentClassJobId, etc.
 
             IsLoaded = aState.IsLoaded > 0;
+            JobId = (JobThreeLetter)(*((byte*)&inst->PlayerState + 0x6e));
+            //the offset in ClientStructs (0x6a) is incorrect
+
+            /* previous code:
+              JobId = (JobThreeLetter)aState.CurrentClassJobId;
+              PluginLog.Information($"CurrentClassJobId: {aState.CurrentClassJobId}");
+            */
+
 
             byte Synced = aState.IsLevelSynced;
             if (Synced > 0)
@@ -117,7 +126,7 @@ namespace SubstatTiers
             Gathering = aState.Attributes[72];
             Perception = aState.Attributes[73];
 
-            JobId = (JobThreeLetter)aState.CurrentClassJobId;
+            
 
             // TODO: figure out how to get synced weapon damage (currently using workaround)
 
